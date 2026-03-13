@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>HAdashglass Pro</title>
     <style>
         :root {
@@ -17,66 +17,70 @@
             font-family: 'Segoe UI', Roboto, sans-serif;
             background-image: url('background/fundo.jpg');
             background-size: cover; background-position: center; background-attachment: fixed;
-            color: white; height: 100vh; display: flex; overflow: hidden;
+            color: white; min-height: 100vh; display: flex;
         }
 
+        /* SIDEBAR RESPONSIVA */
         .sidebar {
             width: 90px; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(15px);
             display: flex; flex-direction: column; align-items: center; padding: 30px 0;
             border-right: 1px solid var(--glass-border);
+            flex-shrink: 0;
         }
-        .nav-icon { margin: 20px 0; font-size: 28px; opacity: 0.4; cursor: pointer; }
-        .nav-icon.active { opacity: 1; color: #4db6ac; filter: drop-shadow(0 0 8px #4db6ac); }
 
-        .main-content { flex: 1; display: flex; flex-direction: column; padding: 30px; overflow-y: auto; }
+        .main-content { flex: 1; display: flex; flex-direction: column; padding: 30px; overflow-x: hidden; }
 
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        #time { font-size: 72px; font-weight: 200; margin: 0; line-height: 1; }
-        #date { font-size: 18px; opacity: 0.7; text-transform: capitalize; }
+        /* HEADER RESPONSIVO */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 20px; }
+        
+        #time { font-size: clamp(48px, 10vw, 72px); font-weight: 200; margin: 0; line-height: 1; }
+        #date { font-size: 16px; opacity: 0.7; }
 
-        /* CARD DE CLIMA */
         .weather-full {
             background: var(--glass); backdrop-filter: blur(25px); border: 1px solid var(--glass-border);
             border-radius: 25px; padding: 15px 25px; display: flex; align-items: center; gap: 20px;
-            min-width: 280px;
         }
-        .weather-main { display: flex; align-items: center; border-right: 1px solid rgba(255,255,255,0.1); padding-right: 20px; }
-        .temp-group { font-size: 32px; font-weight: 300; line-height: 1.1; }
-        .weather-details { font-size: 14px; }
-        .weather-stats { display: flex; gap: 12px; margin-top: 5px; color: #4db6ac; font-weight: bold; }
 
-        .top-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-        .chip {
-            background: var(--glass); border: 1px solid var(--glass-border); backdrop-filter: blur(10px);
-            border-radius: 18px; padding: 8px 18px; display: flex; align-items: center; gap: 10px;
-            cursor: pointer; transition: 0.3s; font-size: 13px;
-        }
-        .chip.active { border-color: var(--active-color); background: rgba(255,180,0,0.1); color: var(--active-color); }
+        .top-bar { display: flex; gap: 12px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 10px; width: 100%; }
+        .chip { flex-shrink: 0; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 18px; padding: 8px 18px; display: flex; align-items: center; gap: 8px; font-size: 13px; }
 
-        .room-section { 
-            grid-column: 1 / -1; margin: 30px 0 10px 0; font-size: 12px; font-weight: 700; 
-            text-transform: uppercase; letter-spacing: 2px; opacity: 0.6; display: flex; align-items: center; 
-        }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
+
+        .room-section { grid-column: 1 / -1; margin: 25px 0 10px 0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; opacity: 0.6; display: flex; align-items: center; }
         .room-section::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.3), transparent); margin-left: 15px; }
-        
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
-        
-        .card { 
-            background: var(--glass); backdrop-filter: blur(25px); border: 1px solid var(--glass-border); 
-            border-radius: 25px; padding: 25px 10px; display: flex; flex-direction: column; 
-            align-items: center; text-align: center; transition: 0.3s; cursor: pointer; 
-        }
+
+        .card { background: var(--glass); backdrop-filter: blur(25px); border: 1px solid var(--glass-border); border-radius: 25px; padding: 20px 10px; display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; transition: 0.2s; }
         .card.on { background: rgba(255, 255, 255, 0.15); border-color: var(--active-color); box-shadow: 0 10px 30px var(--glow); }
-        .card .icon { font-size: 38px; margin-bottom: 10px; }
-        .card .name { font-size: 15px; font-weight: 500; }
-        .card .status { font-size: 11px; opacity: 0.4; }
+
+        /* --- MEDIA QUERIES PARA CELULAR --- */
+        @media (max-width: 768px) {
+            body { flex-direction: column; overflow-y: auto; }
+            
+            .sidebar {
+                width: 100%; height: 60px; flex-direction: row; 
+                justify-content: space-around; padding: 0;
+                position: fixed; bottom: 0; left: 0; z-index: 100;
+                border-right: none; border-top: 1px solid var(--glass-border);
+            }
+
+            .main-content { padding: 15px; padding-bottom: 80px; } /* Espaço para a barra inferior */
+
+            .header { flex-direction: column; align-items: flex-start; text-align: left; }
+            .weather-full { width: 100%; box-sizing: border-box; justify-content: space-between; }
+
+            .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } /* 2 colunas no celular */
+            
+            .card { padding: 15px 5px; }
+            .card .icon { font-size: 30px; }
+            .card .name { font-size: 14px; }
+        }
     </style>
 </head>
 <body>
     <div class="sidebar">
         <div class="nav-icon active">🏠</div>
         <div class="nav-icon">💡</div>
-        <div class="nav-icon" style="margin-top: auto;">⚙️</div>
+        <div class="nav-icon">⚙️</div>
     </div>
 
     <div class="main-content">
@@ -87,19 +91,13 @@
             </div>
             
             <div class="weather-full">
-                <div class="weather-main">
-                    <span id="w-icon" style="font-size: 40px; margin-right: 15px;">☀️</span>
-                    <div class="temp-group">
-                        <span id="w-temp">--</span>°C 
-                        <small style="font-size: 11px; display: block; opacity: 0.6;">Mogi das Cruzes</small>
-                    </div>
+                <div style="display: flex; align-items: center;">
+                    <span id="w-icon" style="font-size: 30px; margin-right: 10px;">☀️</span>
+                    <div class="temp-group"><span id="w-temp">--</span>°C</div>
                 </div>
                 <div class="weather-details">
-                    <div id="w-condition">Sincronizando...</div>
-                    <div class="weather-stats">
-                        <span>💧 <span id="w-humidity">--</span>%</span>
-                        <span>🌧️ <span id="w-rain">--</span>%</span>
-                    </div>
+                    <div id="w-condition" style="font-weight: bold;">--</div>
+                    <div class="weather-stats">💧 <span id="w-humidity">--</span>% | 🌧️ <span id="w-rain">--</span>%</div>
                 </div>
             </div>
         </div>
@@ -107,7 +105,6 @@
         <div class="top-bar" id="top-bar"></div>
         <div class="grid" id="dashboard-grid"></div>
     </div>
-
     <script type="module" src="script.js"></script>
 </body>
 </html>
