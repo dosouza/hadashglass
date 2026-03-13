@@ -18,4 +18,7 @@ export const MY_ENTITIES = [
     { id: "light.lavanderia", label: "Teto", icon: "🧺", room: "Lavanderia" }
 ];
 
-export const WEATHER_ENTITY = "weather.casa_accuweather";
+// Novos sensores para a lógica inteligente de chuva
+export const RAIN_DAY_1 = "sensor.casa_accuweather_thunderstorm_probability_day_1";
+export const RAIN_NIGHT_1 = "sensor.casa_accuweather_thunderstorm_probability_night_1";
+export const WEATHER_ENTITY = "weather.casa_accuweather"; // Verifique se o ID está correto
