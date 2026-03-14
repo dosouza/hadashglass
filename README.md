@@ -1,33 +1,36 @@
 # HAdashglass Pro 🏠✨
 
-Um dashboard elegante, minimalista e responsivo para **Home Assistant**, focado em estética "Glassmorphism" (efeito de vidro) e organização por cômodos.
+Este projeto consiste em um dashboard personalizado para o **Home Assistant**, focado em uma estética **Glassmorphism** (efeito de vidro) moderna e minimalista. Ele foi projetado para ser responsivo, organizado por cômodos e integrado via WebSocket para controle em tempo real.
 
-## 🚀 Funcionalidades
-- **Glassmorphism Design**: Interface moderna com transparências e desfoque de fundo (backdrop-filter).
-- **Organização por Cômodos**: Agrupamento automático de dispositivos por categorias/quartos.
-- **Top Bar Inteligente**: Chips de acesso rápido para sensores e portões.
-- **Clima Detalhado**: Integração com AccuWeather exibindo temperatura, umidade e probabilidade de chuva.
-- **Relógio em Tempo Real**: Data e hora sempre visíveis com atualização dinâmica.
+## 📑 Contexto do Projeto (Memória de Sistema)
+*Se houver perda de contexto em futuras sessões, utilize estas informações para restaurar o progresso:*
 
-## 🛠️ Tecnologias
-- HTML5 / CSS3 (Variáveis CSS, CSS Grid, Flexbox)
-- JavaScript (ES6 Modules)
-- [home-assistant-js-websocket](https://github.com/home-assistant-libs/home-assistant-js-websocket)
+* **Objetivo:** Interface web leve para tablets e telas fixas usando a biblioteca `home-assistant-js-websocket`.
+* **Design:** Utiliza transparências (`rgba`), desfoque de fundo (`backdrop-filter`), e cores de destaque em amarelo/ouro (`#ffb400`).
+* **Tecnologias:** HTML5, CSS3 (Variables, Grid, Flexbox) e JavaScript ES6.
+* **Dispositivos Alvo:** iPhone 15, Mac e tablets dedicados à automação residencial.
 
-## 📦 Como Instalar
+## 🚀 Funcionalidades Atuais
+* **Navegação SPA:** Sistema de abas (Home, Luzes, Tomadas, Ajustes) sem recarregamento de página.
+* **Organização por Cômodos:** Agrupamento automático de dispositivos baseado na propriedade `room` definida no `config.js`.
+* **Monitoramento Climático:** Integração com AccuWeather exibindo temperatura, umidade e probabilidade de chuva.
+* **Relógio Dinâmico:** Data e hora local formatadas em tempo real.
+* **Controles Globais:** Botões para desligar todas as luzes ou interruptores de uma vez em suas respectivas abas.
 
-1.  **Arquivos**: Baixe os arquivos `index.html`, `script.js` e `config.js` e coloque-os em uma pasta no seu servidor ou no diretório `www` do seu Home Assistant.
-2.  **Configuração**: Edite o arquivo `config.js`:
-    ```javascript
-    export const HA_CONFIG = {
-        URL: "http://SEU_IP:8123",
-        TOKEN: "SEU_LONG_LIVED_ACCESS_TOKEN"
-    };
-    ```
-3.  **Personalização**: Adicione suas entidades no array `MY_ENTITIES` dentro do `config.js`, definindo o `id`, `label`, `icon` e o `room`.
+## 🛠️ Estrutura de Arquivos
+* `index.html`: Estrutura principal e containers de página.
+* `style.css`: Estilização visual e lógica do efeito glass.
+* `script.js`: Lógica de conexão com o HA e renderização de componentes.
+* `config.js`: Central de mapeamento de entidades (Luzes da Sala, Quarto Sophia, Quarto Visita, Lavanderia, etc.).
+* `background/fundo.jpg`: Papel de parede abstrato para composição do visual.
 
-## 📸 Screenshots
-*(Dica: Adicione aqui o print do seu dashboard funcionando!)*
+## 📂 Mapeamento de Entidades (Referência)
+Atualmente, o projeto monitora e controla as seguintes áreas:
+* **Sala de Estar:** Iluminação de teto.
+* **Quarto Visita:** Iluminação de teto.
+* **Quarto Sophia:** Closet e iluminação de teto.
+* **Lavanderia:** Iluminação de teto.
+* **Sensores:** Portão da garagem e status do Wi-Fi.
 
-## 📄 Licença
-Este projeto é para uso pessoal e entusiastas de Home Automation.
+## 📄 Licença e Uso
+Projeto desenvolvido para uso pessoal em ambiente de Home Automation.
