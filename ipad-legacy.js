@@ -1,6 +1,6 @@
 /**
  * HAdashglass - ipad-legacy.js
- * Versão: 2.0.0
+ * Versão: 2.0.0 — 17/03/2026
  * Compatibilidade: iOS 10 / Safari antigo (iPad 4ª geração)
  * FEATURES: Filtro de Áreas, Status das Entidades, Agrupamento por Área
  * SEM ES Modules, SEM import/export, SEM Set, SEM arrow functions

@@ -1,6 +1,6 @@
 /**
  * PROJETO: HAdashglass Pro - Logic Engine
- * VERSÃO: 3.1.0
+ * VERSÃO: 3.1.0 — 17/03/2026
  * FEATURES: Nome simplificado, Agrupamento por Áreas, LocalStorage Sync, Filtro de Áreas.
  * COMPATIBILIDADE: Chrome (Mac), Safari (iOS 17+).
  */
