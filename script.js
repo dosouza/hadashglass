@@ -85,6 +85,7 @@ async function init() {
             renderList('switch', 'switches-list', entities, conn, areas, entities_reg, devices);
             renderSettings(entities, areas, entities_reg, devices);
             updateWeather(entities);
+            updateSystemTab(entities, areas);
         });
     } catch (err) {
         console.error("Erro HA:", err);
@@ -241,6 +242,16 @@ function updateWeather(entities) {
     document.getElementById('w-rain').innerText = `${entities[RAIN_DAY_1]?.state || 0}%`;
     const icons = { sunny: '☀️', cloudy: '☁️', rainy: '🌧️', 'partlycloudy': '⛅', pouring: '🌧️', 'clear-night': '🌙' };
     document.getElementById('w-icon').innerText = icons[w.state] || '☀️';
+}
+
+function updateSystemTab(entities, areas) {
+    const visibleIds = JSON.parse(localStorage.getItem('visible_home_entities') || "[]");
+    const totalCount = document.getElementById('sys-total-count');
+    const visibleCount = document.getElementById('sys-visible-count');
+    const areasCount = document.getElementById('sys-areas-count');
+    if (totalCount) totalCount.innerText = Object.keys(entities).length;
+    if (visibleCount) visibleCount.innerText = visibleIds.filter(id => entities[id]).length;
+    if (areasCount) areasCount.innerText = areas.length;
 }
 
 init();
