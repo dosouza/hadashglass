@@ -53,6 +53,7 @@
         </div>
 
         <div id="page-home" class="page active">
+            <div class="area-filter-bar" id="filter-home"></div>
             <div class="grid" id="dashboard-grid">
                 <div style="grid-column:1/-1;text-align:center;padding:40px;opacity:0.5">
                     Conectando ao Home Assistant...
@@ -61,10 +62,12 @@
         </div>
 
         <div id="page-lights" class="page">
+            <div class="area-filter-bar" id="filter-lights"></div>
             <div id="lights-list"></div>
         </div>
 
         <div id="page-switches" class="page">
+            <div class="area-filter-bar" id="filter-switches"></div>
             <div id="switches-list"></div>
         </div>
 
@@ -77,6 +80,7 @@
                 <p class="settings-desc" style="opacity:0.6;font-size:13px;margin-bottom:15px">
                     Ative as entidades que deseja no Dashboard Principal.
                 </p>
+                <div class="area-filter-bar" id="filter-settings"></div>
                 <div id="settings-entities-list"></div>
             </div>
             <div id="tab-system" class="tab-content">
