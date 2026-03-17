@@ -1,3 +1,11 @@
+/**
+ * PROJETO: HAdashglass Pro - Logic Engine
+ * VERSÃO: 3.0.1
+ * FEATURES: Nome simplificado, Agrupamento por Áreas, LocalStorage Sync.
+ * COMPATIBILIDADE: Chrome (Mac), Safari (iOS 17+).
+ * NOTA: Evitar filtros de desfoque pesados em loops para manter estabilidade.
+ */
+
 import { HA_CONFIG, WEATHER_ENTITY, RAIN_DAY_1 } from './config.js';
 import { createConnection, createLongLivedTokenAuth, subscribeEntities, callService } from "https://unpkg.com/home-assistant-js-websocket?module";
 
