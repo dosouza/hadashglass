@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HAdashglass - iPad</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Desativa filtros pesados — iPad 4 iOS 10 não aguenta */
+        * {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+        body {
+            background: url('background/fundoipad6.jpg') center/cover fixed;
+        }
+        .sidebar, .weather-full, .list-item, .card {
+            background: rgba(0, 0, 0, 0.75) !important;
+        }
+        .card.on {
+            background: rgba(255, 180, 0, 0.25) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="nav-icon active" data-target="page-home">🏠</div>
+        <div class="nav-icon" data-target="page-lights">💡</div>
+        <div class="nav-icon" data-target="page-switches">🔌</div>
+        <div class="nav-spacer" style="flex:1"></div>
+        <div class="nav-icon" data-target="page-settings">⚙️</div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="clock-section">
+                <h2 id="time">00:00</h2>
+                <div id="date">Carregando...</div>
+            </div>
+            <div class="weather-full">
+                <span id="w-icon" style="font-size:28px">☀️</span>
+                <div class="weather-info-main">
+                    <div id="w-condition">--</div>
+                    <div class="weather-temp-row">
+                        <span id="w-temp">--</span>°C
+                    </div>
+                    <div class="weather-stats">
+                        <span>💧 <span id="w-humidity">--</span></span>
+                        <span>| 🌧️ <span id="w-rain">--</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-home" class="page active">
+            <div class="grid" id="dashboard-grid">
+                <div style="grid-column:1/-1;text-align:center;padding:40px;opacity:0.5">
+                    Conectando ao Home Assistant...
+                </div>
+            </div>
+        </div>
+
+        <div id="page-lights" class="page">
+            <div id="lights-list"></div>
+        </div>
+
+        <div id="page-switches" class="page">
+            <div id="switches-list"></div>
+        </div>
+
+        <div id="page-settings" class="page">
+            <div class="settings-tabs">
+                <div class="tab-btn active" data-tab="tab-home-config">🏠 Config. Home</div>
+                <div class="tab-btn" data-tab="tab-system">⚙️ Sistema</div>
+            </div>
+            <div id="tab-home-config" class="tab-content active">
+                <p class="settings-desc" style="opacity:0.6;font-size:13px;margin-bottom:15px">
+                    Ative as entidades que deseja no Dashboard Principal.
+                </p>
+                <div id="settings-entities-list"></div>
+            </div>
+            <div id="tab-system" class="tab-content">
+                <div class="list-container">
+                    <div class="list-item"><span>Dispositivo</span><span style="opacity:0.6">iPad Legacy</span></div>
+                    <div class="list-item"><span>Versão</span><span style="opacity:0.6">1.0.0</span></div>
+                    <div class="list-item"><span>Compatibilidade</span><span style="color:#00e676">iOS 10+</span></div>
+                    <div class="list-item"><span>ES Modules</span><span style="color:#ff5252">Desativado</span></div>
+                    <div class="list-item"><span>Backdrop-filter</span><span style="color:#ff5252">Desativado</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEM type="module" — compatível com iOS 10 -->
+    <script src="config-legacy.js"></script>
+    <script src="ipad-legacy.js"></script>
+</body>
+</html>
