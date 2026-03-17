@@ -25,7 +25,29 @@ setInterval(() => {
     document.getElementById('date').innerText = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
 }, 1000);
 
-// RESOLVER ÁREA (Cascata: Entidade > Dispositivo > Área)
+// --- LÓGICA DE SIMPLIFICAÇÃO DE NOMES ---
+function simplifyName(friendlyName, areaName, entityId) {
+    let name = friendlyName || entityId.split('.')[1].replace(/_/g, ' ');
+    const domain = entityId.split('.')[0];
+    
+    // 1. Se for light e tiver "luz" no nome, remove "luz"
+    if (domain === 'light') {
+        const regexLuz = /luz\s*|luz$/gi;
+        name = name.replace(regexLuz, '');
+    }
+
+    // 2. Se a área estiver no nome, remove a área (ex: "Spot Sala" na área "Sala" vira "Spot")
+    if (areaName && areaName !== "Sem Área") {
+        const regexArea = new RegExp(areaName, 'gi');
+        name = name.replace(regexArea, '');
+    }
+
+    // Limpeza de espaços extras e capitalização
+    name = name.trim();
+    return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+// RESOLVER ÁREA
 function getAreaInfo(entityId, areas, entities_reg, devices_reg) {
     const reg = entities_reg.find(e => e.entity_id === entityId);
     let areaId = null;
@@ -61,7 +83,6 @@ async function init() {
     }
 }
 
-// RENDER HOME DINÂMICA
 function renderHome(entities, conn, areas, entities_reg, devices_reg) {
     const grid = document.getElementById('dashboard-grid');
     grid.innerHTML = '';
@@ -88,22 +109,22 @@ function renderHome(entities, conn, areas, entities_reg, devices_reg) {
             const card = document.createElement('div');
             card.className = `card ${isOn ? 'on' : ''}`;
             
-            // Ícone Inteligente por domínio
             let icon = '📱';
             if (domain === 'light') icon = '💡';
             else if (domain === 'switch') icon = '🔌';
             else if (domain === 'sensor') icon = '🌡️';
             else if (domain === 'binary_sensor') icon = '🛡️';
-            else if (domain === 'lock') icon = '🔒';
+
+            // APLICAÇÃO DA SIMPLIFICAÇÃO
+            const displayName = simplifyName(ent.attributes.friendly_name, room, item.id);
 
             card.innerHTML = `
                 <div style="font-size:30px">${icon}</div>
-                <div style="font-size:12px;margin-top:8px;font-weight:500">${ent.attributes.friendly_name || item.id}</div>
-                <div style="font-size:10px;opacity:0.6">${ent.state}</div>
+                <div style="font-size:12px;margin-top:8px;font-weight:600">${displayName}</div>
+                <div style="font-size:10px;opacity:0.5;margin-top:4px">${ent.state}</div>
             `;
             
-            // Só toggle se for domínio de controle
-            if (['light', 'switch', 'lock', 'fan'].includes(domain)) {
+            if (['light', 'switch', 'fan'].includes(domain)) {
                 card.onclick = () => callService(conn, domain, "toggle", { entity_id: item.id });
             }
             grid.appendChild(card);
@@ -111,20 +132,60 @@ function renderHome(entities, conn, areas, entities_reg, devices_reg) {
     });
 }
 
-// AJUSTES: LISTAGEM DE TUDO POR ÁREA
+function renderList(domain, containerId, entities, conn, areas, entities_reg, devices_reg) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const allIds = Object.keys(entities).filter(id => id.startsWith(`${domain}.`));
+    const grouped = {};
+    allIds.forEach(id => {
+        const room = getAreaInfo(id, areas, entities_reg, devices_reg);
+        if (!grouped[room]) grouped[room] = [];
+        grouped[room].push({ id: id, state: entities[id] });
+    });
+
+    const activeCount = allIds.filter(id => entities[id].state === 'on').length;
+    container.innerHTML = `
+        <div class="summary-header">
+            <span><strong>${activeCount}</strong> ${domain === 'light' ? 'Luzes' : 'Interruptores'} ativos</span>
+            ${activeCount > 0 ? `<button class="btn-off" id="off-${domain}">Desligar Tudo</button>` : ''}
+        </div>
+        <div id="${containerId}-content" class="list-container"></div>
+    `;
+
+    if(activeCount > 0) document.getElementById(`off-${domain}`).onclick = () => { allIds.forEach(id => { if(entities[id].state === 'on') callService(conn, domain, "turn_off", { entity_id: id }); }); };
+    
+    const listContent = document.getElementById(`${containerId}-content`);
+    Object.keys(grouped).sort().forEach(room => {
+        const roomEntities = grouped[room];
+        const activeInRoom = roomEntities.filter(item => item.state.state === 'on');
+        const rHeader = document.createElement('div');
+        rHeader.className = 'room-section';
+        rHeader.innerHTML = `<span>${room}</span>${activeInRoom.length > 0 ? `<button class="btn-off-mini">Desligar Sala</button>` : ''}`;
+        listContent.appendChild(rHeader);
+
+        roomEntities.forEach(item => {
+            const displayName = simplifyName(item.state.attributes.friendly_name, room, item.id);
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'list-item';
+            itemDiv.innerHTML = `
+                <span>${displayName}</span>
+                <label class="switch"><input type="checkbox" ${item.state.state === 'on' ? 'checked' : ''}><span class="slider"></span></label>
+            `;
+            itemDiv.querySelector('input').onchange = () => callService(conn, domain, item.state.state === 'on' ? 'turn_off' : 'turn_on', { entity_id: item.id });
+            listContent.appendChild(itemDiv);
+        });
+    });
+}
+
 function renderSettings(entities, areas, entities_reg, devices_reg) {
     const container = document.getElementById('settings-entities-list');
     if (!container) return;
-
     let visibleIds = JSON.parse(localStorage.getItem('visible_home_entities') || "[]");
-    
-    // Filtra todas as entidades válidas, ativas e não ocultas
     const allEntities = Object.keys(entities).filter(id => {
         const reg = entities_reg.find(e => e.entity_id === id);
         return reg && !reg.hidden_by && !reg.disabled_by;
     });
 
-    // Agrupa por área para os ajustes
     const groupedSettings = {};
     allEntities.forEach(id => {
         const room = getAreaInfo(id, areas, entities_reg, devices_reg);
@@ -136,7 +197,6 @@ function renderSettings(entities, areas, entities_reg, devices_reg) {
     Object.keys(groupedSettings).sort().forEach(room => {
         const section = document.createElement('div');
         section.className = 'room-section';
-        section.style.marginTop = '20px';
         section.innerText = room;
         container.appendChild(section);
 
@@ -154,48 +214,12 @@ function renderSettings(entities, areas, entities_reg, devices_reg) {
                     <span class="slider"></span>
                 </label>
             `;
-
             itemDiv.querySelector('input').onchange = (e) => {
-                if (e.target.checked) {
-                    if (!visibleIds.includes(id)) visibleIds.push(id);
-                } else {
-                    visibleIds = visibleIds.filter(v => v !== id);
-                }
+                if (e.target.checked) { if (!visibleIds.includes(id)) visibleIds.push(id); }
+                else { visibleIds = visibleIds.filter(v => v !== id); }
                 localStorage.setItem('visible_home_entities', JSON.stringify(visibleIds));
             };
             container.appendChild(itemDiv);
-        });
-    });
-}
-
-// (renderList e updateWeather permanecem os mesmos das versões anteriores)
-function renderList(domain, containerId, entities, conn, areas, entities_reg, devices_reg) {
-    const container = document.getElementById(containerId);
-    const allIds = Object.keys(entities).filter(id => id.startsWith(`${domain}.`));
-    const grouped = {};
-    allIds.forEach(id => {
-        const room = getAreaInfo(id, areas, entities_reg, devices_reg);
-        if (!grouped[room]) grouped[room] = [];
-        grouped[room].push({ id: id, state: entities[id] });
-    });
-    const activeCount = allIds.filter(id => entities[id].state === 'on').length;
-    container.innerHTML = `<div class="summary-header"><span><strong>${activeCount}</strong> ${domain === 'light' ? 'Luzes' : 'Interruptores'} ativos</span>${activeCount > 0 ? `<button class="btn-off" id="off-${domain}">Desligar Tudo</button>` : ''}</div><div id="${containerId}-content" class="list-container"></div>`;
-    if(activeCount > 0) document.getElementById(`off-${domain}`).onclick = () => { allIds.forEach(id => { if(entities[id].state === 'on') callService(conn, domain, "turn_off", { entity_id: id }); }); };
-    const listContent = document.getElementById(`${containerId}-content`);
-    Object.keys(grouped).sort().forEach(room => {
-        const roomEntities = grouped[room];
-        const activeInRoom = roomEntities.filter(item => item.state.state === 'on');
-        const rHeader = document.createElement('div');
-        rHeader.className = 'room-section';
-        rHeader.innerHTML = `<span>${room}</span>${activeInRoom.length > 0 ? `<button class="btn-off-mini">Desligar Sala</button>` : ''}`;
-        listContent.appendChild(rHeader);
-        if (activeInRoom.length > 0) rHeader.querySelector('.btn-off-mini').onclick = () => activeInRoom.forEach(item => callService(conn, domain, "turn_off", { entity_id: item.id }));
-        roomEntities.forEach(item => {
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'list-item';
-            itemDiv.innerHTML = `<span>${item.state.attributes.friendly_name || item.id}</span><label class="switch"><input type="checkbox" ${item.state.state === 'on' ? 'checked' : ''}><span class="slider"></span></label>`;
-            itemDiv.querySelector('input').onchange = () => callService(conn, domain, item.state.state === 'on' ? 'turn_off' : 'turn_on', { entity_id: item.id });
-            listContent.appendChild(itemDiv);
         });
     });
 }
