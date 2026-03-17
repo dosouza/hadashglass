@@ -1,42 +1,38 @@
-Com certeza. Atualizei o README.md para refletir o estado atual estável do projeto, incluindo o sistema de versionamento que acabamos de implementar. Este documento servirá como a "memória" do projeto para nossa próxima sessão.
+🏠 HAdashglass Pro — Status do Projeto
+📋 Resumo da Versão Atual
+Versão: 3.0.1 (Stable Rollback)
 
-README.md - Dashboard Home Assistant (Glassmorphism Pro)
-📌 Visão Geral do Projeto
-Este projeto consiste em um Dashboard personalizado para o Home Assistant, focado na estética Glassmorphism (efeito de vidro) e alta performance para visualização em tablets modernos e computadores. O sistema utiliza conexões via WebSocket e possui mapeamento automático de áreas e entidades.
+Status: Funcional e Estável no Mac (Chrome) e iPhone 15
 
-🛠️ Controle de Versão e Cache
-Para garantir a estabilidade e evitar problemas de cache (especialmente em dispositivos móveis), o projeto utiliza um sistema de versionamento nos cabeçalhos e nas chamadas de arquivos.
+Ambiente: Dashboard integrado ao Home Assistant via WebSockets
 
-Versão Atual: 3.0.0 "Auto Mapping".
+Última Alteração: Reversão completa para remover instabilidades de navegação e conflitos de abas.
 
-Cache-Busting: Os arquivos JS e CSS são chamados com sufixos de versão (ex: script.js?v=3.0.1) para forçar a atualização imediata no navegador.
+🛠️ Funcionalidades Ativas (v3.0.1)
+Auto Mapping: Mapeamento automático de entidades por áreas (Cozinha, Sala, etc.).
 
-📂 Estrutura de Arquivos Estável
-1. index.html (v3.0.0)
-Cabeçalho de Diagnóstico: Removido para limpeza visual após estabilização.
+Simplificação de Nomes: Remoção inteligente de termos redundantes (ex: "Luz" e nomes de áreas) nos cards.
 
-Sidebar: Navegação lateral entre Home, Luzes, Interruptores e Configurações.
+Sincronização Local: Preferências de visibilidade de entidades salvas no navegador.
 
-Weather Widget: Exibição de temperatura, umidade e probabilidade de chuva.
+Navegação Lateral: Alternância entre Home, Luzes, Tomadas e Configurações.
 
-2. script.js (v3.0.1)
-Simplificação de Nomes: Remove termos redundantes (ex: "Luz") e nomes de áreas duplicados nos títulos dos cards.
+Clima e Relógio: Header funcional com dados em tempo real.
 
-Mapeamento por Área: Agrupamento automático de entidades por cômodos consultando o registro do HA.
+🚀 Planejamento para Amanhã (Foco: iPad 6)
+O objetivo é criar uma experiência fluida no iPad 6 sem comprometer a versão Pro que roda no Mac/iPhone.
 
-LocalStorage: Salva as preferências de visibilidade de cada dispositivo individualmente.
+1. Criação do ipad-lite.html
+Versão "Enxuta" com CSS simplificado.
 
-3. style.css (v3.0.0)
-Design: Utiliza backdrop-filter: blur(10px) e transparências rgba para o efeito de vidro.
+Remoção de backdrop-filter: blur para economizar memória RAM.
 
-Grid Dinâmico: Layout adaptativo usando auto-fill e minmax(140px, 1fr).
+Uso de cores sólidas ou gradientes simples em vez de transparência vítrea.
 
-Otimização: Cores base e variáveis centralizadas no :root.
+2. Otimização de Performance
+Avaliar a necessidade de reduzir a frequência de atualização do relógio ou clima.
 
-⚠️ Notas Técnicas Importantes
-Compatibilidade: Versão totalmente funcional em Mac (Chrome/Safari) e iPhone (iOS 17+).
+Testar a renderização de listas longas (muitas luzes/tomadas) para evitar o fechamento repentino do Safari no iPadOS antigo.
 
-Dispositivos Legados (iPad 6): Identificado erro de estouro de memória RAM ao processar backdrop-filter. Recomenda-se evitar o uso desta versão visualmente pesada no Safari do iPad 6 até que uma folha de estilo simplificada seja criada.
-
-🚀 Como Retomar o Desenvolvimento
-Ao iniciar uma nova conversa, forneça estes arquivos versionados. O foco atual é a manutenção da estética Pro enquanto exploramos formas de compatibilidade isolada para hardware limitado.
+3. Ajuste de Layout (90x90)
+Revisar o espaçamento do grid para que os cards fiquem proporcionais à tela do iPad, mantendo a estética moderna.
