@@ -1,36 +1,41 @@
-# HAdashglass Pro 🏠✨
+📌 Visão Geral do Projeto
+Este projeto consiste em um Dashboard personalizado para Home Assistant, focado em estética Glassmorphism (efeito de vidro) e alta performance para visualização em tablets e computadores. O sistema utiliza conexões via WebSocket e possui mapeamento automático de áreas e entidades.
 
-Este projeto consiste em um dashboard personalizado para o **Home Assistant**, focado em uma estética **Glassmorphism** (efeito de vidro) moderna e minimalista. Ele foi projetado para ser responsivo, organizado por cômodos e integrado via WebSocket para controle em tempo real.
+🛠️ Tecnologias Utilizadas
+Linguagem: HTML5, CSS3 e JavaScript (ES6+).
 
-## 📑 Contexto do Projeto (Memória de Sistema)
-*Se houver perda de contexto em futuras sessões, utilize estas informações para restaurar o progresso:*
+Conexão: home-assistant-js-websocket para comunicação em tempo real.
 
-* **Objetivo:** Interface web leve para tablets e telas fixas usando a biblioteca `home-assistant-js-websocket`.
-* **Design:** Utiliza transparências (`rgba`), desfoque de fundo (`backdrop-filter`), e cores de destaque em amarelo/ouro (`#ffb400`).
-* **Tecnologias:** HTML5, CSS3 (Variables, Grid, Flexbox) e JavaScript ES6.
-* **Dispositivos Alvo:** iPhone 15, Mac e tablets dedicados à automação residencial.
+Design: Estética de vidro com backdrop-filter: blur, transparências e ícones dinâmicos.
 
-## 🚀 Funcionalidades Atuais
-* **Navegação SPA:** Sistema de abas (Home, Luzes, Tomadas, Ajustes) sem recarregamento de página.
-* **Organização por Cômodos:** Agrupamento automático de dispositivos baseado na propriedade `room` definida no `config.js`.
-* **Monitoramento Climático:** Integração com AccuWeather exibindo temperatura, umidade e probabilidade de chuva.
-* **Relógio Dinâmico:** Data e hora local formatadas em tempo real.
-* **Controles Globais:** Botões para desligar todas as luzes ou interruptores de uma vez em suas respectivas abas.
+📂 Estrutura de Arquivos Estável
+Atualmente, o projeto utiliza três arquivos principais que devem ser mantidos na versão v3.0 - Auto Mapping:
 
-## 🛠️ Estrutura de Arquivos
-* `index.html`: Estrutura principal e containers de página.
-* `style.css`: Estilização visual e lógica do efeito glass.
-* `script.js`: Lógica de conexão com o HA e renderização de componentes.
-* `config.js`: Central de mapeamento de entidades (Luzes da Sala, Quarto Sophia, Quarto Visita, Lavanderia, etc.).
-* `background/fundo.jpg`: Papel de parede abstrato para composição do visual.
+1. index.html (Estrutura de Abas)
+Sidebar: Navegação lateral entre Home, Luzes, Interruptores e Configurações.
 
-## 📂 Mapeamento de Entidades (Referência)
-Atualmente, o projeto monitora e controla as seguintes áreas:
-* **Sala de Estar:** Iluminação de teto.
-* **Quarto Visita:** Iluminação de teto.
-* **Quarto Sophia:** Closet e iluminação de teto.
-* **Lavanderia:** Iluminação de teto.
-* **Sensores:** Portão da garagem e status do Wi-Fi.
+Header: Relógio digital (24h), data por extenso e widget de clima completo.
 
-## 📄 Licença e Uso
-Projeto desenvolvido para uso pessoal em ambiente de Home Automation.
+Containers: Áreas específicas (grid) para renderização dinâmica via JavaScript.
+
+2. script.js (Lógica e Integração)
+Simplificação de Nomes: Função que remove automaticamente termos redundantes como "Luz" e o nome do cômodo do título dos cards (ex: "Luz Sala" na área "Sala" vira apenas "Sala").
+
+Mapeamento por Área: O código consulta o registro do Home Assistant e agrupa as entidades automaticamente por cômodos.
+
+Persistência Local: Utiliza localStorage para salvar quais entidades o usuário deseja fixar na tela inicial (page-home).
+
+3. style.css (Visual e Layout)
+Variáveis CSS: Centralização de cores e níveis de transparência (--glass, --active-color).
+
+Responsividade: Grid adaptativo que redimensiona os cards dependendo do tamanho da tela.
+
+Estados Visuais: Cards mudam de borda e brilho (box-shadow) quando a entidade está ligada (on).
+
+⚠️ Status do Dispositivo (iPad 6)
+Desafio: O iPad 6 (Safari antigo) apresenta erro de memória ("problema com a página web") ao tentar processar efeitos pesados de blur (vidro embaçado).
+
+Solução Atual: Manter a versão visualmente rica para Mac e iPhone, e tratar o iPad como um caso isolado de otimização de RAM futuramente.
+
+🚀 Como Iniciar uma Nova Conversa
+Para retomar o projeto, basta carregar estes três arquivos e informar que o foco deve ser mantido na Versão Estável Glassmorphism, preservando a lógica de simplificação de nomes e o layout de grid.
