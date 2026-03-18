@@ -74,6 +74,19 @@ input:checked + .slider:before { transform: translateX(22px); }
 .page { display: none; }
 .page.active { display: block; }
 
+/* ESTRELA FAVORITO */
+.star-btn {
+    font-size: 20px;
+    cursor: pointer;
+    color: rgba(255,255,255,0.2);
+    transition: color 0.2s, transform 0.15s;
+    user-select: none;
+    -webkit-user-select: none;
+    line-height: 1;
+}
+.star-btn:hover { color: rgba(255,180,0,0.6); transform: scale(1.2); }
+.star-btn.star-on { color: #ffb400; text-shadow: 0 0 8px rgba(255,180,0,0.5); }
+
 /* FILTRO DE ÁREAS */
 .area-filter-bar {
     display: flex;

@@ -20,6 +20,27 @@
         .card.on {
             background: rgba(255, 180, 0, 0.25) !important;
         }
+
+        /* Grid responsivo para iPad 4 (1024px landscape / 768px portrait) */
+        .grid {
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)) !important;
+            gap: 10px !important;
+        }
+        .card {
+            padding: 14px 10px !important;
+            border-radius: 16px !important;
+            min-height: 90px;
+        }
+
+        /* Header compacto */
+        #time { font-size: 56px !important; }
+        #date { font-size: 14px !important; }
+        .main-content { padding: 20px !important; }
+        .header { margin-bottom: 20px !important; }
+
+        /* Estrela favorito */
+        .star-btn { font-size: 20px; cursor: pointer; color: rgba(255,255,255,0.2); -webkit-user-select: none; }
+        .star-btn.star-on { color: #ffb400; }
     </style>
 </head>
 <body>
@@ -72,25 +93,12 @@
         </div>
 
         <div id="page-settings" class="page">
-            <div class="settings-tabs">
-                <div class="tab-btn active" data-tab="tab-home-config">🏠 Config. Home</div>
-                <div class="tab-btn" data-tab="tab-system">⚙️ Sistema</div>
-            </div>
-            <div id="tab-home-config" class="tab-content active">
-                <p class="settings-desc" style="opacity:0.6;font-size:13px;margin-bottom:15px">
-                    Ative as entidades que deseja no Dashboard Principal.
-                </p>
-                <div class="area-filter-bar" id="filter-settings"></div>
-                <div id="settings-entities-list"></div>
-            </div>
-            <div id="tab-system" class="tab-content">
-                <div class="list-container">
-                    <div class="list-item"><span>Dispositivo</span><span style="opacity:0.6">iPad Legacy</span></div>
-                    <div class="list-item"><span>Versão</span><span style="opacity:0.6">2.0.0 — 17/03/2026</span></div>
-                    <div class="list-item"><span>Compatibilidade</span><span style="color:#00e676">iOS 10+</span></div>
-                    <div class="list-item"><span>ES Modules</span><span style="color:#ff5252">Desativado</span></div>
-                    <div class="list-item"><span>Backdrop-filter</span><span style="color:#ff5252">Desativado</span></div>
-                </div>
+            <div class="list-container">
+                <div class="list-item"><span>Dispositivo</span><span style="opacity:0.6">iPad Legacy</span></div>
+                <div class="list-item"><span>Versão</span><span style="opacity:0.6">2.0.0 — 17/03/2026</span></div>
+                <div class="list-item"><span>Compatibilidade</span><span style="color:#00e676">iOS 10+</span></div>
+                <div class="list-item"><span>ES Modules</span><span style="color:#ff5252">Desativado</span></div>
+                <div class="list-item"><span>Backdrop-filter</span><span style="color:#ff5252">Desativado</span></div>
             </div>
         </div>
     </div>

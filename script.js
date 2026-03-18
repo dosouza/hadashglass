@@ -115,10 +115,34 @@ function renderAreaFilter(filterId, availableRooms, filterKey, onChangeCallback)
     bar.scrollLeft = scrollLeft;
 }
 
+// ÍCONE SVG de lâmpada — acesa ou com risco (off)
+function getLightIcon(isOn) {
+    const color  = isOn ? '#ffb400' : 'rgba(255,255,255,0.25)';
+    const stroke = isOn ? '#ffb400' : 'rgba(255,255,255,0.25)';
+    const base = `<svg width="38" height="38" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9 21h6M12 3a6 6 0 0 1 4 10.47V17H8v-3.53A6 6 0 0 1 12 3z"
+              stroke="${stroke}" stroke-width="1.8" stroke-linecap="round"
+              fill="${color}" fill-opacity="${isOn ? '0.3' : '0'}"/>
+        <line x1="8" y1="19" x2="16" y2="19" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round"/>
+        ${!isOn ? '<line x1="4" y1="4" x2="20" y2="20" stroke="rgba(255,80,80,0.7)" stroke-width="2" stroke-linecap="round"/>' : ''}
+    </svg>`;
+    return base;
+}
+
+function getEntityIcon(domain, state) {
+    const isOn = state === 'on';
+    if (domain === 'light')         return getLightIcon(isOn);
+    if (domain === 'switch')        return `<span style="font-size:30px">${isOn ? '🟡' : '⚫'}</span>`;
+    if (domain === 'sensor')        return `<span style="font-size:30px">🌡️</span>`;
+    if (domain === 'binary_sensor') return `<span style="font-size:30px">${isOn ? '🟢' : '⚫'}</span>`;
+    if (domain === 'climate')       return `<span style="font-size:30px">${isOn ? '❄️' : '🌬️'}</span>`;
+    if (domain === 'media_player')  return `<span style="font-size:30px">${isOn ? '🎵' : '🔇'}</span>`;
+    return `<span style="font-size:30px">📱</span>`;
+}
+
 // RENDER HOME
 function renderHome(entities, conn, areas, entities_reg, devices_reg) {
     const grid = document.getElementById('dashboard-grid');
-    grid.innerHTML = '';
     const visibleIds = JSON.parse(localStorage.getItem('visible_home_entities') || "[]");
 
     const grouped = {};
@@ -130,7 +154,21 @@ function renderHome(entities, conn, areas, entities_reg, devices_reg) {
     });
 
     const allRooms = Object.keys(grouped).sort();
+
+    // Renderiza filtro ANTES de limpar o grid
     renderAreaFilter('filter-home', allRooms, 'home', () => renderHome(entities, conn, areas, entities_reg, devices_reg));
+
+    // Agora limpa e renderiza os cards
+    grid.innerHTML = '';
+
+    if (allRooms.length === 0) {
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;opacity:0.5;padding:60px 20px">' +
+            '<div style="font-size:40px;margin-bottom:10px">⚙️</div>' +
+            '<p>Nenhuma entidade visível.</p>' +
+            '<p style="font-size:12px;margin-top:8px">Vá em Configurações e ative as entidades que deseja exibir.</p>' +
+            '</div>';
+        return;
+    }
 
     allRooms.forEach(room => {
         if (!isRoomVisible(room, 'home')) return;
@@ -147,16 +185,13 @@ function renderHome(entities, conn, areas, entities_reg, devices_reg) {
             const card = document.createElement('div');
             card.className = `card ${isOn ? 'on' : ''}`;
 
-            let icon = '📱';
-            if (domain === 'light') icon = '💡';
-            else if (domain === 'switch') icon = '🔌';
-            else if (domain === 'sensor') icon = '🌡️';
-            else if (domain === 'binary_sensor') icon = '🛡️';
-
             const displayName = simplifyName(ent.attributes.friendly_name, room, item.id);
+            const nameColor = isOn ? '#ffb400' : 'rgba(255,255,255,0.5)';
             card.innerHTML = `
-                <div style="font-size:30px">${icon}</div>
-                <div style="font-size:12px;margin-top:8px;font-weight:600">${displayName}</div>
+                <div style="display:flex;justify-content:center;align-items:center;height:38px">
+                    ${getEntityIcon(domain, ent.state)}
+                </div>
+                <div style="font-size:12px;margin-top:8px;font-weight:600;color:${nameColor}">${displayName}</div>
                 <div style="font-size:10px;opacity:0.5;margin-top:4px">${ent.state}</div>
             `;
             if (['light', 'switch', 'fan'].includes(domain)) {
@@ -165,6 +200,20 @@ function renderHome(entities, conn, areas, entities_reg, devices_reg) {
             grid.appendChild(card);
         });
     });
+}
+
+// FAVORITO — adiciona/remove do Home
+function toggleFavorite(entityId, starEl) {
+    let visibleIds = JSON.parse(localStorage.getItem('visible_home_entities') || '[]');
+    const isFav = visibleIds.includes(entityId);
+    if (isFav) {
+        visibleIds = visibleIds.filter(v => v !== entityId);
+        starEl.classList.remove('star-on');
+    } else {
+        visibleIds.push(entityId);
+        starEl.classList.add('star-on');
+    }
+    localStorage.setItem('visible_home_entities', JSON.stringify(visibleIds));
 }
 
 // RENDER LISTA (Luzes / Tomadas)
@@ -230,14 +279,22 @@ function renderList(domain, containerId, entities, conn, areas, entities_reg, de
 
         roomEntities.forEach(item => {
             const displayName = simplifyName(item.state.attributes.friendly_name, room, item.id);
+            const visibleIds = JSON.parse(localStorage.getItem('visible_home_entities') || '[]');
+            const isFav = visibleIds.includes(item.id);
             const itemDiv = document.createElement('div');
             itemDiv.className = 'list-item';
             itemDiv.innerHTML = `
                 <span>${displayName}</span>
-                <label class="switch"><input type="checkbox" ${item.state.state === 'on' ? 'checked' : ''}><span class="slider"></span></label>
+                <div style="display:flex;align-items:center;gap:12px">
+                    <span class="star-btn ${isFav ? 'star-on' : ''}" title="Adicionar ao Home">★</span>
+                    <label class="switch"><input type="checkbox" ${item.state.state === 'on' ? 'checked' : ''}><span class="slider"></span></label>
+                </div>
             `;
             itemDiv.querySelector('input').onchange = () =>
                 callService(conn, domain, item.state.state === 'on' ? 'turn_off' : 'turn_on', { entity_id: item.id });
+            itemDiv.querySelector('.star-btn').onclick = function() {
+                toggleFavorite(item.id, this);
+            };
             listContent.appendChild(itemDiv);
         });
     });
@@ -338,7 +395,6 @@ async function init() {
             renderHome(entities, conn, areas, entities_reg, devices);
             renderList('light',  'lights-list',   entities, conn, areas, entities_reg, devices);
             renderList('switch', 'switches-list', entities, conn, areas, entities_reg, devices);
-            renderSettings(entities, areas, entities_reg, devices);
             updateWeather(entities);
             updateSystemTab(entities, areas);
         });

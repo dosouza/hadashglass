@@ -60,23 +60,6 @@ function iniciarNavegacao() {
     }
 }
 
-function iniciarTabs() {
-    var btns = document.querySelectorAll('.tab-btn');
-    for (var i = 0; i < btns.length; i++) {
-        (function(btn) {
-            btn.addEventListener('click', function() {
-                var allBtns = document.querySelectorAll('.tab-btn');
-                var allTabs = document.querySelectorAll('.tab-content');
-                for (var k = 0; k < allBtns.length; k++) allBtns[k].classList.remove('active');
-                for (var k = 0; k < allTabs.length; k++) allTabs[k].classList.remove('active');
-                btn.classList.add('active');
-                var tab = document.getElementById(btn.getAttribute('data-tab'));
-                if (tab) tab.classList.add('active');
-            });
-        })(btns[i]);
-    }
-}
-
 // ── WEBSOCKET HA ──────────────────────────────────────────────
 function sendMsg(obj) {
     if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj));
@@ -116,13 +99,32 @@ function connect() {
             return;
         }
         if (data.type === 'event' && data.id === subscribeId) {
-            var changes = data.event.a || {};
-            for (var key in changes) {
-                allEntities[key] = allEntities[key] || {};
-                allEntities[key].state      = changes[key].s !== undefined ? changes[key].s : (allEntities[key].state || '');
-                allEntities[key].attributes = changes[key].a || allEntities[key].attributes || {};
-                if (changes[key].a && changes[key].a.friendly_name) {
-                    allEntities[key].attributes.friendly_name = changes[key].a.friendly_name;
+            var evt = data.event;
+
+            // 'a' = adicionadas, 'c' = alteradas — ambos precisam ser processados
+            var toProcess = {};
+            if (evt.a) { for (var k in evt.a) toProcess[k] = evt.a[k]; }
+            if (evt.c) { for (var k in evt.c) toProcess[k] = evt.c[k]; }
+
+            for (var key in toProcess) {
+                var change = toProcess[key];
+                allEntities[key] = allEntities[key] || { attributes: {} };
+
+                // Estado pode vir em '+' (diff) ou direto em 's'
+                if (change['+']) {
+                    if (change['+'].s !== undefined) allEntities[key].state = change['+'].s;
+                    if (change['+'].a) {
+                        for (var attr in change['+'].a) {
+                            allEntities[key].attributes[attr] = change['+'].a[attr];
+                        }
+                    }
+                } else {
+                    if (change.s !== undefined) allEntities[key].state = change.s;
+                    if (change.a) {
+                        for (var attr in change.a) {
+                            allEntities[key].attributes[attr] = change.a[attr];
+                        }
+                    }
                 }
             }
             renderAll();
@@ -200,14 +202,34 @@ function simplifyName(friendlyName, areaName, entityId) {
 }
 
 function getIcon(domain, state) {
-    if (domain === 'light')         return '💡';
-    if (domain === 'switch')        return '🔌';
-    if (domain === 'cover')         return '🚪';
+    var isOn = state === 'on';
+    if (domain === 'light')         return isOn ? '💡' : '🔌'; 
+    if (domain === 'switch')        return isOn ? '🟡' : '⚫';
+    if (domain === 'cover')         return isOn ? '🔓' : '🔒';
     if (domain === 'sensor')        return '🌡️';
-    if (domain === 'binary_sensor') return '🛡️';
-    if (domain === 'climate')       return '❄️';
-    if (domain === 'media_player')  return '🎵';
+    if (domain === 'binary_sensor') return isOn ? '🟢' : '⚫';
+    if (domain === 'climate')       return isOn ? '❄️' : '🌬️';
+    if (domain === 'media_player')  return isOn ? '🎵' : '🔇';
     return '📱';
+}
+
+// Ícone SVG inline para luz — mais visual que emoji
+function getLightIcon(isOn) {
+    var color = isOn ? '#ffb400' : 'rgba(255,255,255,0.25)';
+    var stroke = isOn ? '#ffb400' : 'rgba(255,255,255,0.25)';
+    // Lâmpada simples: acesa (amarela) ou com risco (cinza)
+    if (isOn) {
+        return '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+               '<path d="M9 21h6M12 3a6 6 0 0 1 4 10.47V17H8v-3.53A6 6 0 0 1 12 3z" stroke="' + stroke + '" stroke-width="1.8" stroke-linecap="round" fill="' + color + '" fill-opacity="0.3"/>' +
+               '<line x1="8" y1="19" x2="16" y2="19" stroke="' + stroke + '" stroke-width="1.8" stroke-linecap="round"/>' +
+               '</svg>';
+    } else {
+        return '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+               '<path d="M9 21h6M12 3a6 6 0 0 1 4 10.47V17H8v-3.53A6 6 0 0 1 12 3z" stroke="' + stroke + '" stroke-width="1.8" stroke-linecap="round"/>' +
+               '<line x1="8" y1="19" x2="16" y2="19" stroke="' + stroke + '" stroke-width="1.8" stroke-linecap="round"/>' +
+               '<line x1="4" y1="4" x2="20" y2="20" stroke="rgba(255,80,80,0.7)" stroke-width="2" stroke-linecap="round"/>' +
+               '</svg>';
+    }
 }
 
 function getStateColor(state) {
@@ -314,17 +336,23 @@ function renderHome() {
     }
 
     var allRooms = Object.keys(grouped).sort();
+
+    // Renderiza filtro ANTES de limpar o grid
     renderAreaFilter('filter-home', allRooms, 'home', renderHome);
 
-    var html = '';
+    // Agora limpa e renderiza os cards
+    grid.innerHTML = '';
+
     if (allRooms.length === 0) {
-        html = '<div style="grid-column:1/-1;text-align:center;opacity:0.5;padding:40px">' +
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;opacity:0.5;padding:40px">' +
                '<div style="font-size:40px">⚙️</div>' +
                '<p>Nenhuma entidade visível.</p>' +
                '<p style="font-size:12px">Vá em Configurações e ative as que deseja exibir.</p>' +
                '</div>';
+        return;
     }
 
+    var html = '';
     for (var r = 0; r < allRooms.length; r++) {
         var room = allRooms[r];
         if (hasAnyFilter('home') && !areaFilters['home'][room]) continue;
@@ -339,11 +367,17 @@ function renderHome() {
             var label = simplifyName(ent.attributes ? ent.attributes.friendly_name : null, room, id);
             var icon = getIcon(domain, ent.state);
             var canToggle = (domain === 'light' || domain === 'switch' || domain === 'fan' || domain === 'cover');
+            var iconHtml;
+            if (domain === 'light') {
+                iconHtml = getLightIcon(isOn);
+            } else {
+                iconHtml = '<div style="font-size:28px">' + getIcon(domain, ent.state) + '</div>';
+            }
             html += '<div class="card' + (isOn ? ' on' : '') + '"' +
                     (canToggle ? ' onclick="callToggle(\'' + domain + '\',\'' + id + '\')"' : '') +
                     ' style="cursor:' + (canToggle ? 'pointer' : 'default') + '">' +
-                    '<div style="font-size:28px">' + icon + '</div>' +
-                    '<div style="font-size:11px;margin-top:6px;font-weight:700">' + label + '</div>' +
+                    iconHtml +
+                    '<div style="font-size:11px;margin-top:6px;font-weight:700;color:' + (isOn ? '#ffb400' : 'rgba(255,255,255,0.5)') + '">' + label + '</div>' +
                     '<div style="font-size:10px;opacity:0.5;margin-top:3px">' + ent.state + '</div>' +
                     '</div>';
         }
@@ -417,12 +451,18 @@ function renderList(domain, containerId) {
             var ent = allEntities[id];
             var isOn = ent.state === 'on';
             var label = simplifyName(ent.attributes ? ent.attributes.friendly_name : null, room, id);
+            var visIds = [];
+            try { visIds = JSON.parse(localStorage.getItem('visible_home_entities') || '[]'); } catch(e) {}
+            var isFav = visIds.indexOf(id) >= 0;
             html += '<div class="list-item">' +
                 '<span>' + label + '</span>' +
+                '<div style="display:flex;align-items:center;gap:12px">' +
+                '<span class="star-btn' + (isFav ? ' star-on' : '') + '" onclick="toggleFavorite(\'' + id + '\',this)">★</span>' +
                 '<label class="switch">' +
                 '<input type="checkbox"' + (isOn ? ' checked' : '') +
                 ' onchange="toggleSwitch(\'' + domain + '\',\'' + id + '\',this)">' +
                 '<span class="slider"></span></label>' +
+                '</div>' +
                 '</div>';
         }
     }
@@ -521,6 +561,24 @@ function toggleSwitch(domain, entityId, checkbox) {
     callService(domain, checkbox.checked ? 'turn_on' : 'turn_off', entityId);
 }
 
+function toggleFavorite(entityId, starEl) {
+    var visibleIds = [];
+    try { visibleIds = JSON.parse(localStorage.getItem('visible_home_entities') || '[]'); } catch(e) {}
+    var isFav = visibleIds.indexOf(entityId) >= 0;
+    if (isFav) {
+        var newIds = [];
+        for (var i = 0; i < visibleIds.length; i++) {
+            if (visibleIds[i] !== entityId) newIds.push(visibleIds[i]);
+        }
+        visibleIds = newIds;
+        starEl.classList.remove('star-on');
+    } else {
+        visibleIds.push(entityId);
+        starEl.classList.add('star-on');
+    }
+    localStorage.setItem('visible_home_entities', JSON.stringify(visibleIds));
+}
+
 function desligarTudo(domain) {
     for (var id in allEntities) {
         var room = getAreaName(id);
@@ -561,13 +619,11 @@ function renderAll() {
     renderHome();
     renderList('light',  'lights-list');
     renderList('switch', 'switches-list');
-    renderSettings();
     updateWeather();
 }
 
 // ── INIT ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
     iniciarNavegacao();
-    iniciarTabs();
     connect();
 });
