@@ -6,9 +6,9 @@
 
 | Arquivo | Versão | Alvo |
 |---|---|---|
-| `script.js` | 3.1.0 | Mac / iPhone (Chrome, Safari iOS 17+) |
-| `ipad-legacy.js` | 2.0.0 | iPad 4ª geração (iOS 10, Safari antigo) |
-| `style.css` | 3.1.0 | Compartilhado (Pro + iPad) |
+| `script.js` | 3.2.0 | Mac / iPhone (Chrome, Safari iOS 17+) |
+| `ipad-legacy.js` | 2.1.0 | iPad 4ª geração (iOS 10, Safari antigo) |
+| `style.css` | 3.2.0 | Compartilhado (Pro + iPad) |
 | `config.js` | — | Versão Pro (ES Modules) |
 | `config-legacy.js` | — | Versão iPad (var, sem export) |
 
@@ -28,39 +28,44 @@ HAdashglass/
 ├── ipad.html               ← Versão iPad Legacy
 ├── ipad-legacy.js          ← Engine iPad (JS puro, iOS 10)
 ├── config-legacy.js        ← Credenciais iPad (var, sem export)
-└── README.md
+├── README.md               ← Este arquivo
+└── CLAUDE.md               ← Histórico de conversa com IA
 ```
 
 ---
 
 ## ✅ Funcionalidades Ativas
 
-### 🖥️ Versão Pro — `index.html` + `script.js` (v3.1.0)
+### 🖥️ Versão Pro — `index.html` + `script.js` (v3.2.0)
 
 - **WebSocket nativo** via `home-assistant-js-websocket`
 - **Auto Mapping por Áreas** — agrupa entidades pelas áreas do HA automaticamente
 - **Simplificação de Nomes** — remove "Luz" e nome da área do friendly_name
-- **Filtro de Áreas** — chips clicáveis em todas as páginas (Home, Luzes, Tomadas, Config)
+- **Filtro de Áreas** — chips clicáveis nas páginas Home, Luzes e Tomadas
   - Multi-select: pode filtrar por várias áreas simultaneamente
   - Filtro independente por página
   - Persistido no localStorage entre sessões
-- **Status das Entidades** — badge colorido ao lado do nome no Config Home
-  - 🟢 Verde = `on` | ⚪ Cinza = `off` | 🔵 Azul = outros estados
+- **Ícones visuais on/off** — lâmpada SVG amarela (on) ou com risco vermelho (off)
+  - Nome do card: amarelo = ligado, cinza = desligado
+- **⭐ Estrela Favorito** — nas listas de Luzes e Tomadas, clique na ★ para adicionar/remover do Home
 - **Desligar Tudo / Desligar Sala** — respeitam o filtro de área ativo
-- **Aba Sistema** — exibe: versão, dispositivo, ES Modules, Backdrop-filter, total de entidades, visíveis, áreas mapeadas
+- **Aba Sistema** — versão, dispositivo, ES Modules, Backdrop-filter, total de entidades, visíveis, áreas mapeadas
 - **Clima e Relógio** — header com temperatura, condição, umidade e chuva em tempo real
-- **Navegação Lateral** — Home, Luzes, Tomadas, Configurações
-- **LocalStorage Sync** — visibilidade de entidades persistida no navegador
+- **Navegação Lateral** — Home 🏠, Luzes 💡, Tomadas 🔌, Sistema ⚙️
+- **LocalStorage Sync** — favoritos e filtros persistidos no navegador
 
-### 📱 Versão iPad Legacy — `ipad.html` + `ipad-legacy.js` (v2.0.0)
+### 📱 Versão iPad Legacy — `ipad.html` + `ipad-legacy.js` (v2.1.0)
 
 - **Mesmas funcionalidades da versão Pro**, adaptadas para iOS 10
-- **WebSocket nativo** — sem dependências externas
-- **Filtro de Áreas** — mesma UX da versão Pro, implementado com objetos `{}` em vez de `Set`
-- **Status das Entidades** — badge colorido no Config Home
-- **Desligar Sala** — funcional com filtro respeitado
+- **WebSocket nativo** — sem dependências externas, processa campos `a` e `c` do subscribe
+- **Atualização em tempo real** — cards atualizam visualmente ao toggle sem precisar recarregar
+- **Filtro de Áreas** — mesma UX da versão Pro, com objetos `{}` em vez de `Set`
+- **Ícones SVG on/off** — lâmpada amarela ou com risco vermelho, nome colorido por estado
+- **⭐ Estrela Favorito** — mesma funcionalidade da versão Pro
+- **Grid responsivo** — cards de 110px mínimo, ajustado para tela do iPad 4
+- **Header compacto** — fonte menor para caber no layout do iPad
 - **Sem ES Modules** — zero `import`/`export`, zero arrow functions complexas
-- **Sem backdrop-filter** — desativado via CSS inline para preservar RAM do iPad
+- **Sem backdrop-filter** — desativado via CSS para preservar RAM
 - **Reconexão automática** — WebSocket reconecta em 5s se cair
 
 ---
@@ -69,11 +74,12 @@ HAdashglass/
 
 | Recurso | Pro (index.html) | iPad (ipad.html) |
 |---|---|---|
-| ES Modules | ✅ | ❌ desativado |
+| ES Modules | ✅ | ❌ usa `var` |
 | Arrow functions | ✅ | ❌ usa `function()` |
 | `Set` / Spread `...` | ✅ | ❌ usa objetos `{}` |
 | Template literals | ✅ | ❌ concatenação |
 | `backdrop-filter` | ✅ | ❌ desativado |
+| SVG inline | ✅ | ✅ |
 | WebSocket | ✅ | ✅ |
 | LocalStorage | ✅ | ✅ |
 | iOS 10 Safari | ❌ | ✅ |
@@ -110,6 +116,16 @@ var RAIN_NIGHT_1   = "sensor.casa_accuweather_thunderstorm_probability_night_1";
 
 ## 📜 Histórico de Versões
 
+### v3.2.0 / ipad v2.1.0 — 17/03/2026
+- ✨ Ícones SVG visuais: lâmpada amarela (on) / lâmpada com risco vermelho (off)
+- ✨ Nome do card colorido por estado (amarelo = on, cinza = off)
+- ✨ ⭐ Estrela Favorito nas listas de Luzes e Tomadas — substitui o Config Home
+- 🗑️ Removida aba "Config. Home" dos ajustes (substituída pela estrela)
+- 🐛 Fix iPad: subscribe_entities agora processa campos `a` (added) e `c` (changed)
+- 🐛 Fix iPad: cards agora atualizam visualmente em tempo real sem recarregar
+- 🐛 Fix iPad: grid responsivo corrigido (cards não se sobrepõem mais)
+- 🐛 Fix Pro: Home vazio corrigido (filtro renderizado antes de limpar o grid)
+
 ### v3.1.0 / ipad v2.0.0 — 17/03/2026
 - ✨ Filtro de Áreas em todas as páginas (Home, Luzes, Tomadas, Config Home)
 - ✨ Badge de status das entidades no Config Home (verde/cinza/azul)
@@ -132,8 +148,9 @@ var RAIN_NIGHT_1   = "sensor.casa_accuweather_thunderstorm_probability_night_1";
 
 ## 🚀 Próximos Passos Sugeridos
 
-- [ ] Suporte a `climate` e `cover` no grid Home (card de temperatura / persiana)
-- [ ] Modo escuro/claro alternável
+- [ ] Suporte a `climate` no grid Home (card de temperatura com setpoint)
+- [ ] Suporte a `cover` no grid Home (card de persiana/portão)
 - [ ] Página de Câmeras (stream MJPEG via HA)
 - [ ] Notificações de alertas (motion, door sensors)
+- [ ] Modo escuro/claro alternável
 - [ ] Atualização automática do token ao expirar
