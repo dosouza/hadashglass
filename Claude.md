@@ -9,89 +9,121 @@
 
 **Projeto:** HAdashglass — Dashboard HTML para Home Assistant
 **Dono:** Demetrius Souza
-**Ambiente:** Dashboard web servido via Go Live (VSCode) acessado pelo navegador na rede local
-**HA IP:** `http://10.10.0.148:8123` (servidor HA)
-**Dashboard IP:** `http://10.10.0.145` (servidor Go Live)
+**Ambiente:** Dashboard web servido pela pasta `www` do próprio Home Assistant
+**HA IP:** `http://10.10.0.148:8123`
+**Repositório:** GitHub (privado) — editado via `github.dev` no browser
 
 ---
 
 ## 📱 Dispositivos em Uso
 
-| Dispositivo | Acesso | Arquivo |
+| Dispositivo | URL | Arquivo |
 |---|---|---|
-| Mac / iPhone 15 | `http://10.10.0.145/index.html` | Versão Pro |
-| iPad 4ª geração (iOS 10.3.3, MD512LL/A) | `http://10.10.0.145/ipad.html` | Versão Legacy |
+| Mac / iPhone 15 | `http://10.10.0.148:8123/local/hadashglass/index.html` | Versão Pro |
+| iPad 4ª geração (iOS 10.3.3, MD512LL/A) | `http://10.10.0.148:8123/local/hadashglass/ipad.html` | Versão Legacy |
+
+---
+
+## 🏗️ Infraestrutura
+
+| O que | Detalhe |
+|---|---|
+| Servidor | Raspberry Pi rodando Home Assistant |
+| Pasta no Pi | `/config/www/hadashglass/` (symlink de `/homeassistant/www/`) |
+| URL base HA | `http://10.10.0.148:8123/local/hadashglass/` |
+| GitHub | Repositório privado — editado via `github.dev` |
+| Deploy | Crontab no Pi: `*/5 * * * * cd /config/www/hadashglass && git pull` |
+| Log autopull | `/config/www/hadashglass/autopull.log` |
+| SSH Pi | `ssh root@10.10.0.148` |
+| Mac local | `~/Documents/GitHub/hadashglass` |
+| Alias Mac | `hadashglass` → `cd ~/Documents/GitHub/hadashglass` |
+
+---
+
+## 🔑 Arquivos que NÃO vão para o Git
+
+- `config.js` — token da versão Pro
+- `config-legacy.js` — token da versão iPad
+- Ambos no `.gitignore`
+- Precisam ser criados manualmente no Pi após clone
 
 ---
 
 ## 🏗️ Decisões Técnicas Importantes
 
 ### Por que dois arquivos JS?
-O iPad 4 roda iOS 10.3.3, cujo Safari **não suporta ES Modules** (`type="module"`), `import/export`, `Set`, spread operator (`...`) ou arrow functions complexas. Por isso existe:
-- `script.js` — versão moderna com ES Modules
-- `ipad-legacy.js` — versão iOS 10 com JS puro (`var`, `function()`, objetos `{}`)
+O iPad 4 roda iOS 10.3.3 — Safari não suporta ES Modules, `import/export`, `Set`, spread `...` ou arrow functions. Por isso:
+- `script.js` — versão moderna ES Modules
+- `ipad-legacy.js` — JS puro iOS 10 (`var`, `function()`, objetos `{}`)
 
-### Por que dois arquivos de config?
-- `config.js` usa `export const` (ES Modules) → só funciona na versão Pro
-- `config-legacy.js` usa `var` simples → funciona no iOS 10
-- **Importante:** sempre manter os dois sincronizados ao trocar IP ou token
+### Por que hospedar na pasta www do HA?
+- Zero configuração extra de servidor
+- Mesma origem → sem problemas de CORS com WebSocket
+- Acesso externo automático via Nabu Casa (já contratado)
+- `git pull` automático via crontab
+
+### Por que NÃO usar iframe no HA?
+- iPad 4 não tem app HA para iOS 10
+- Frontend do HA é pesado demais para 1GB RAM do iPad 4
+- WebSocket duplicado (HA + dashboard)
 
 ### WebSocket HA
-O projeto usa o protocolo WebSocket nativo do HA (`/api/websocket`), não depende de bibliotecas externas na versão iPad. O `subscribe_entities` envia mudanças em dois campos:
-- `a` (added/initial) — entidades novas ou estado inicial
-- `c` (changed) — mudanças de estado, pode vir com formato diff `+`
+Usa protocolo nativo `/api/websocket`. Subscribe envia:
+- `a` (added) — estado inicial
+- `c` (changed) — mudanças, formato diff com `+`
+Ambos processados no `ipad-legacy.js`
 
 ---
 
-## 📋 Funcionalidades Implementadas (estado atual)
+## 📋 Funcionalidades Implementadas
 
 ### Ambas as versões:
 - ✅ Relógio e data em tempo real (pt-BR)
-- ✅ Clima via AccuWeather (temperatura, condição, umidade, chuva)
-- ✅ Auto Mapping por Áreas do HA (registry)
-- ✅ Simplificação de nomes (remove "Luz" e nome da área)
+- ✅ Clima via AccuWeather
+- ✅ Auto Mapping por Áreas do HA
+- ✅ Simplificação de nomes
 - ✅ Navegação lateral (Home, Luzes, Tomadas, Sistema)
-- ✅ Filtro de Áreas com chips clicáveis (multi-select, persistido)
-- ✅ Ícones SVG visuais: lâmpada amarela (on) / com risco vermelho (off)
+- ✅ Filtro de Áreas com chips (multi-select, persistido)
+- ✅ Ícones SVG: lâmpada amarela (on) / com risco vermelho (off)
 - ✅ Nome do card colorido: amarelo = on, cinza = off
 - ✅ ⭐ Estrela Favorito nas listas → adiciona/remove do Home
-- ✅ Desligar Tudo / Desligar Sala (respeitam filtro de área)
+- ✅ Desligar Tudo / Desligar Sala (respeitam filtro)
 - ✅ Reconexão automática WebSocket (5s)
 - ✅ LocalStorage para favoritos e filtros
 
 ### Só versão Pro:
-- ✅ Aba Sistema com contadores dinâmicos (total entidades, visíveis, áreas)
+- ✅ Aba Sistema com contadores dinâmicos
 
 ### Só versão iPad:
-- ✅ Grid responsivo (cards 110px, header compacto)
-- ✅ Sem backdrop-filter (preserva RAM do iPad 4)
-- ✅ Processamento de campos `a` e `c` do WebSocket
+- ✅ Grid responsivo (cards 110px)
+- ✅ Sem backdrop-filter
+- ✅ Processa campos `a` e `c` do WebSocket
 
 ---
 
-## 🗑️ O que foi removido e por quê
+## 🗑️ O que foi removido
 
 | O que | Por quê |
 |---|---|
-| Aba "Config. Home" nos ajustes | Substituída pela ⭐ Estrela Favorito nas listas |
-| `iniciarTabs()` no iPad | Sem tabs para gerenciar após remoção do Config Home |
-| `renderSettings()` | Não é mais chamada no ciclo de render |
+| Aba "Config. Home" | Substituída pela ⭐ Estrela Favorito |
+| `iniciarTabs()` iPad | Sem tabs após remoção |
+| `renderSettings()` | Não chamada no ciclo de render |
 
 ---
 
-## 🐛 Bugs Resolvidos (histórico)
+## 🐛 Bugs Resolvidos
 
 | Bug | Causa | Fix |
 |---|---|---|
-| iPad tela em branco | `type="module"` não suportado no iOS 10 | Criado `ipad-legacy.js` sem ES Modules |
-| `ipad-legacy.js` vazio | Arquivo nunca foi escrito | Reescrito do zero |
-| `ipad.html` apontava para `ipad-lite.js` | Nome errado | Corrigido para `ipad-legacy.js` |
-| Duplicação de código no `script.js` | `str_replace` só substituiu o início | Arquivo recriado limpo |
-| Home vazio na versão Pro | Grid limpo antes do filtro renderizar | Filtro renderizado antes de `grid.innerHTML = ''` |
-| Cards sobrepostos no iPad | `minmax(140px)` largo demais | Override para `minmax(110px)` no `ipad.html` |
-| Toggle não atualiza card no iPad | `subscribe_entities` só lia campo `a`, ignorava `c` | Handler atualizado para processar `a` e `c` |
-| Aba Sistema invisível no iPad | `div` com classe `tab-content` que CSS esconde | Removida a classe, conteúdo direto em `.page` |
-| Estrela acidental aparecendo | Emoji no SVG do getLightIcon | Separado getLightIcon de getIcon |
+| iPad tela em branco | `type="module"` não suportado iOS 10 | Criado `ipad-legacy.js` |
+| Duplicação no `script.js` | `str_replace` parcial | Arquivo recriado limpo |
+| Home vazio Pro | Grid limpo antes do filtro | Filtro renderizado antes do `innerHTML = ''` |
+| Cards sobrepostos iPad | `minmax(140px)` largo demais | Override `minmax(110px)` |
+| Toggle não atualiza iPad | Só lia campo `a`, ignorava `c` | Handler atualizado |
+| Aba Sistema invisível iPad | Classe `tab-content` escondida pelo CSS | Removida a classe |
+| 404 no HA | Cache do browser com URL antiga | Aba anônima / limpar cache |
+| Git divergente Pi/Mac | Moveu pasta do iCloud para Documentos | `git fetch && git reset --hard origin/main` |
+| Git case-sensitive Mac | Mac não detecta maiúscula→minúscula | `git mv` com nome temporário |
 
 ---
 
@@ -100,49 +132,48 @@ O projeto usa o protocolo WebSocket nativo do HA (`/api/websocket`), não depend
 ### `index.html`
 - Título: `HAdashglass Pro v3.1`
 - Pages: `page-home`, `page-lights`, `page-switches`, `page-settings`
-- Settings: só aba Sistema (sem Config Home)
+- Settings: só Sistema (sem Config Home, sem tabs)
 - Scripts: `script.js?v=3.0.1` (type="module")
 
 ### `script.js` (v3.2.0)
-- Funções principais: `getLightIcon`, `getEntityIcon`, `toggleFavorite`, `renderHome`, `renderList`, `updateWeather`, `updateSystemTab`, `init`
+- Funções: `getLightIcon`, `getEntityIcon`, `toggleFavorite`, `renderHome`, `renderList`, `updateWeather`, `updateSystemTab`, `init`
 - Removidas: `renderSettings`
-- `areaFilters`: objeto com Sets para `home`, `lights`, `switches`
+- `areaFilters`: Sets para `home`, `lights`, `switches`
 
 ### `ipad.html`
 - Pages: `page-home`, `page-lights`, `page-switches`, `page-settings`
-- Settings: conteúdo direto sem tabs
+- Settings: conteúdo direto sem tabs nem Config Home
 - Scripts: `config-legacy.js` + `ipad-legacy.js` (sem type="module")
-- CSS override inline: grid responsivo, header compacto, estrela
+- CSS override: grid responsivo, header compacto, estrela
 
 ### `ipad-legacy.js` (v2.1.0)
-- Funções principais: `getLightIcon`, `getIcon`, `toggleFavorite`, `renderHome`, `renderList`, `updateWeather`, `renderAll`, `connect`, `loadRegistries`
+- Funções: `getLightIcon`, `getIcon`, `toggleFavorite`, `renderHome`, `renderList`, `updateWeather`, `renderAll`, `connect`
 - Removidas: `renderSettings`, `iniciarTabs`
-- WebSocket handler: processa `evt.a` e `evt.c`, formato diff com `+`
-- `areaFilters`: objeto com objetos `{}` (sem Set)
+- WebSocket: processa `evt.a` e `evt.c`, formato diff `+`
+- `areaFilters`: objetos `{}` (sem Set)
 
 ### `style.css` (v3.2.0)
 - Adicionado: `.star-btn`, `.star-btn.star-on`, `.area-chip`, `.area-filter-bar`
-
-### `config.js` / `config-legacy.js`
-- Nunca modificados — contêm IP, token e entity IDs do AccuWeather
 
 ---
 
 ## 💬 Como Retomar a Conversa
 
-Se precisar continuar o desenvolvimento em uma nova conversa, diga ao Claude:
+Se precisar continuar em nova conversa, diga ao Claude:
 
-> "Estou desenvolvendo o projeto HAdashglass, um dashboard HTML para Home Assistant. 
-> Segue o CLAUDE.md com todo o histórico do projeto para você ter contexto:"
+> "Estou desenvolvendo o projeto HAdashglass, um dashboard HTML para Home Assistant.
+> Segue o CLAUDE.md com todo o histórico:"
 > [cole este arquivo]
 
 ---
 
-## 🔮 Próximos Passos Planejados
+## 🔮 Próximos Passos
 
-- [ ] Card de `climate` no Home (temperatura + setpoint, toggle on/off)
-- [ ] Card de `cover` no Home (persiana/portão com ícone de posição)
-- [ ] Página de Câmeras com stream MJPEG
-- [ ] Notificações visuais de sensores (motion, door, smoke)
-- [ ] Modo claro/escuro alternável
-- [ ] Atualização automática do token HA ao expirar
+- [ ] Testar iPad na nova URL do HA
+- [ ] Criar `config-legacy.js` no Pi para o iPad
+- [ ] Salvar bookmark na tela inicial do iPad
+- [ ] Detecção automática URL (casa `10.10.0.148` vs Nabu Casa)
+- [ ] Card de `climate` no Home (temperatura + setpoint)
+- [ ] Card de `cover` no Home (persiana/portão)
+- [ ] Página de Câmeras (stream MJPEG)
+- [ ] Notificações visuais de sensores
