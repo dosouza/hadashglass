@@ -87,6 +87,18 @@ input:checked + .slider:before { transform: translateX(22px); }
 .star-btn:hover { color: rgba(255,180,0,0.6); transform: scale(1.2); }
 .star-btn.star-on { color: #ffb400; text-shadow: 0 0 8px rgba(255,180,0,0.5); }
 
+/* FILTER GROUP — agrupa filtro de área + filtro de status */
+.filter-group {
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 4px;
+}
+.filter-group .area-filter-bar {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 8px;
+}
+
 /* FILTRO DE ÁREAS */
 .area-filter-bar {
     display: flex;

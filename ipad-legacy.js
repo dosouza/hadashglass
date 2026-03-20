@@ -27,6 +27,13 @@ var areaFilters = {
     settings: {}
 };
 
+// Filtros de status por página
+var stateFilters = {
+    home:     'all',
+    lights:   'all',
+    switches: 'all'
+};
+
 // ── RELÓGIO ───────────────────────────────────────────────────
 function tickClock() {
     var now = new Date();
@@ -251,6 +258,40 @@ function loadAreaFilters() {
             }
         } catch(e) { areaFilters[key] = {}; }
     }
+    var sKeys = ['home', 'lights', 'switches'];
+    for (var s = 0; s < sKeys.length; s++) {
+        var sv = localStorage.getItem('state_filter_' + sKeys[s]);
+        if (sv) stateFilters[sKeys[s]] = sv;
+    }
+}
+
+function isStateVisible(state, filterKey) {
+    var f = stateFilters[filterKey];
+    return f === 'all' || state === f;
+}
+
+function renderStateFilter(barId, filterKey, labels, renderCallback) {
+    var bar = document.getElementById(barId);
+    if (!bar) return;
+    bar.innerHTML = '';
+    var options = [
+        { value: 'all', label: labels.all },
+        { value: 'on',  label: labels.on  },
+        { value: 'off', label: labels.off }
+    ];
+    for (var i = 0; i < options.length; i++) {
+        var chip = document.createElement('div');
+        chip.className = 'area-chip' + (stateFilters[filterKey] === options[i].value ? ' active' : '');
+        chip.innerText = options[i].label;
+        chip.onclick = (function(fk, val, cb) {
+            return function() {
+                stateFilters[fk] = val;
+                localStorage.setItem('state_filter_' + fk, val);
+                cb();
+            };
+        })(filterKey, options[i].value, renderCallback);
+        bar.appendChild(chip);
+    }
 }
 
 function saveAreaFilter(key) {
@@ -337,8 +378,10 @@ function renderHome() {
 
     var allRooms = Object.keys(grouped).sort();
 
-    // Renderiza filtro ANTES de limpar o grid
+    // Renderiza filtros ANTES de limpar o grid
     renderAreaFilter('filter-home', allRooms, 'home', renderHome);
+    renderStateFilter('state-filter-home', 'home',
+        { all: 'Todos', on: 'On', off: 'Off' }, renderHome);
 
     // Agora limpa e renderiza os cards
     grid.innerHTML = '';
@@ -357,15 +400,15 @@ function renderHome() {
         var room = allRooms[r];
         if (hasAnyFilter('home') && !areaFilters['home'][room]) continue;
 
-        html += '<div class="room-section">' + room + '</div>';
+        var roomHtml = '';
         var ids = grouped[room];
         for (var j = 0; j < ids.length; j++) {
             var id = ids[j];
             var ent = allEntities[id];
+            if (!isStateVisible(ent.state, 'home')) continue;
             var isOn = ent.state === 'on';
             var domain = id.split('.')[0];
             var label = simplifyName(ent.attributes ? ent.attributes.friendly_name : null, room, id);
-            var icon = getIcon(domain, ent.state);
             var canToggle = (domain === 'light' || domain === 'switch' || domain === 'fan' || domain === 'cover');
             var iconHtml;
             if (domain === 'light') {
@@ -373,13 +416,16 @@ function renderHome() {
             } else {
                 iconHtml = '<div style="font-size:28px">' + getIcon(domain, ent.state) + '</div>';
             }
-            html += '<div class="card' + (isOn ? ' on' : '') + '"' +
+            roomHtml += '<div class="card' + (isOn ? ' on' : '') + '"' +
                     (canToggle ? ' onclick="callToggle(\'' + domain + '\',\'' + id + '\')"' : '') +
                     ' style="cursor:' + (canToggle ? 'pointer' : 'default') + '">' +
                     iconHtml +
                     '<div style="font-size:11px;margin-top:6px;font-weight:700;color:' + (isOn ? '#ffb400' : 'rgba(255,255,255,0.5)') + '">' + label + '</div>' +
                     '<div style="font-size:10px;opacity:0.5;margin-top:3px">' + ent.state + '</div>' +
                     '</div>';
+        }
+        if (roomHtml) {
+            html += '<div class="room-section">' + room + '</div>' + roomHtml;
         }
     }
 
@@ -393,6 +439,10 @@ function renderList(domain, containerId) {
 
     var filterKey = domain === 'light' ? 'lights' : 'switches';
     var filterId  = 'filter-' + filterKey;
+    var stateFilterId = 'state-filter-' + filterKey;
+    var stateLabels = domain === 'light'
+        ? { all: 'Todas', on: 'Acesas', off: 'Apagadas' }
+        : { all: 'Todos', on: 'Ligados', off: 'Desligados' };
 
     var allIds = [];
     for (var id in allEntities) {
@@ -409,8 +459,9 @@ function renderList(domain, containerId) {
 
     var allRooms = Object.keys(grouped).sort();
     renderAreaFilter(filterId, allRooms, filterKey, function() { renderList(domain, containerId); });
+    renderStateFilter(stateFilterId, filterKey, stateLabels, function() { renderList(domain, containerId); });
 
-    // Contar ativos respeitando filtro
+    // Contar ativos respeitando ambos os filtros
     var activeCount = 0;
     var totalActive = 0;
     for (var i = 0; i < allIds.length; i++) {
@@ -418,11 +469,13 @@ function renderList(domain, containerId) {
         if (allEntities[id].state === 'on') {
             totalActive++;
             var r = getAreaName(id);
-            if (!hasAnyFilter(filterKey) || areaFilters[filterKey][r]) activeCount++;
+            if ((!hasAnyFilter(filterKey) || areaFilters[filterKey][r]) && isStateVisible(allEntities[id].state, filterKey)) {
+                activeCount++;
+            }
         }
     }
 
-    var filtradoTxt = (hasAnyFilter(filterKey) && totalActive !== activeCount) ?
+    var filtradoTxt = ((hasAnyFilter(filterKey) || stateFilters[filterKey] !== 'all') && totalActive !== activeCount) ?
         ' <span style="opacity:0.5;font-size:11px">(filtrado de ' + totalActive + ')</span>' : '';
 
     var domainLabel = domain === 'light' ? 'Luzes' : 'Interruptores';
@@ -435,26 +488,20 @@ function renderList(domain, containerId) {
         var room = allRooms[r];
         if (hasAnyFilter(filterKey) && !areaFilters[filterKey][room]) continue;
 
+        var roomHtml = '';
         var activeInRoom = 0;
-        for (var j = 0; j < grouped[room].length; j++) {
-            if (allEntities[grouped[room][j]].state === 'on') activeInRoom++;
-        }
-
-        html += '<div class="room-section">' +
-            '<span>' + room + '</span>' +
-            (activeInRoom > 0 ? '<button class="btn-off-mini" onclick="desligarSala(\'' + domain + '\',\'' + room + '\')">Desligar Sala</button>' : '') +
-            '</div>';
-
         var ids = grouped[room];
         for (var j = 0; j < ids.length; j++) {
             var id = ids[j];
             var ent = allEntities[id];
+            if (!isStateVisible(ent.state, filterKey)) continue;
             var isOn = ent.state === 'on';
+            if (isOn) activeInRoom++;
             var label = simplifyName(ent.attributes ? ent.attributes.friendly_name : null, room, id);
             var visIds = [];
             try { visIds = JSON.parse(localStorage.getItem('visible_home_entities') || '[]'); } catch(e) {}
             var isFav = visIds.indexOf(id) >= 0;
-            html += '<div class="list-item">' +
+            roomHtml += '<div class="list-item">' +
                 '<span>' + label + '</span>' +
                 '<div style="display:flex;align-items:center;gap:12px">' +
                 '<span class="star-btn' + (isFav ? ' star-on' : '') + '" onclick="toggleFavorite(\'' + id + '\',this)">★</span>' +
@@ -465,6 +512,12 @@ function renderList(domain, containerId) {
                 '</div>' +
                 '</div>';
         }
+        if (!roomHtml) continue;
+
+        html += '<div class="room-section">' +
+            '<span>' + room + '</span>' +
+            (activeInRoom > 0 ? '<button class="btn-off-mini" onclick="desligarSala(\'' + domain + '\',\'' + room + '\')">Desligar Sala</button>' : '') +
+            '</div>' + roomHtml;
     }
     html += '</div>';
     container.innerHTML = html;

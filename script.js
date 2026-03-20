@@ -16,6 +16,13 @@ const areaFilters = {
     settings: new Set()
 };
 
+// Estado dos filtros de status por página
+const stateFilters = {
+    home: 'all',
+    lights: 'all',
+    switches: 'all'
+};
+
 // NAVEGAÇÃO
 document.querySelectorAll('.nav-icon').forEach(icon => {
     icon.onclick = () => {
@@ -75,6 +82,36 @@ function loadAreaFilters() {
             const saved = JSON.parse(localStorage.getItem('area_filter_' + key) || '[]');
             saved.forEach(r => areaFilters[key].add(r));
         } catch(e) {}
+    });
+    ['home', 'lights', 'switches'].forEach(key => {
+        const saved = localStorage.getItem('state_filter_' + key);
+        if (saved) stateFilters[key] = saved;
+    });
+}
+
+function isStateVisible(state, filterKey) {
+    const f = stateFilters[filterKey];
+    return f === 'all' || state === f;
+}
+
+function renderStateFilter(barId, filterKey, labels, onChangeCallback) {
+    const bar = document.getElementById(barId);
+    if (!bar) return;
+    bar.innerHTML = '';
+    [
+        { value: 'all', label: labels.all },
+        { value: 'on',  label: labels.on  },
+        { value: 'off', label: labels.off }
+    ].forEach(opt => {
+        const chip = document.createElement('div');
+        chip.className = 'area-chip' + (stateFilters[filterKey] === opt.value ? ' active' : '');
+        chip.innerText = opt.label;
+        chip.onclick = () => {
+            stateFilters[filterKey] = opt.value;
+            localStorage.setItem('state_filter_' + filterKey, opt.value);
+            onChangeCallback();
+        };
+        bar.appendChild(chip);
     });
 }
 
@@ -155,8 +192,11 @@ function renderHome(entities, conn, areas, entities_reg, devices_reg) {
 
     const allRooms = Object.keys(grouped).sort();
 
-    // Renderiza filtro ANTES de limpar o grid
+    // Renderiza filtros ANTES de limpar o grid
     renderAreaFilter('filter-home', allRooms, 'home', () => renderHome(entities, conn, areas, entities_reg, devices_reg));
+    renderStateFilter('state-filter-home', 'home',
+        { all: 'Todos', on: 'On', off: 'Off' },
+        () => renderHome(entities, conn, areas, entities_reg, devices_reg));
 
     // Agora limpa e renderiza os cards
     grid.innerHTML = '';
@@ -173,12 +213,15 @@ function renderHome(entities, conn, areas, entities_reg, devices_reg) {
     allRooms.forEach(room => {
         if (!isRoomVisible(room, 'home')) return;
 
+        const roomEntities = grouped[room].filter(item => isStateVisible(item.state.state, 'home'));
+        if (roomEntities.length === 0) return;
+
         const rDiv = document.createElement('div');
         rDiv.className = 'room-section';
         rDiv.innerText = room;
         grid.appendChild(rDiv);
 
-        grouped[room].forEach(item => {
+        roomEntities.forEach(item => {
             const ent = item.state;
             const isOn = ent.state === 'on';
             const domain = item.id.split('.')[0];
@@ -223,6 +266,10 @@ function renderList(domain, containerId, entities, conn, areas, entities_reg, de
 
     const filterKey = domain === 'light' ? 'lights' : 'switches';
     const filterId = 'filter-' + filterKey;
+    const stateFilterId = 'state-filter-' + filterKey;
+    const stateLabels = domain === 'light'
+        ? { all: 'Todas', on: 'Acesas', off: 'Apagadas' }
+        : { all: 'Todos', on: 'Ligados', off: 'Desligados' };
 
     const allIds = Object.keys(entities).filter(id => id.startsWith(`${domain}.`));
     const grouped = {};
@@ -234,13 +281,15 @@ function renderList(domain, containerId, entities, conn, areas, entities_reg, de
 
     const allRooms = Object.keys(grouped).sort();
     renderAreaFilter(filterId, allRooms, filterKey, () => renderList(domain, containerId, entities, conn, areas, entities_reg, devices_reg));
+    renderStateFilter(stateFilterId, filterKey, stateLabels, () => renderList(domain, containerId, entities, conn, areas, entities_reg, devices_reg));
 
     const activeCount = allIds.filter(id => {
         const room = getAreaInfo(id, areas, entities_reg, devices_reg);
-        return entities[id].state === 'on' && isRoomVisible(room, filterKey);
+        return entities[id].state === 'on' && isRoomVisible(room, filterKey) && isStateVisible(entities[id].state, filterKey);
     }).length;
     const totalActive = allIds.filter(id => entities[id].state === 'on').length;
-    const filtrado = areaFilters[filterKey].size > 0 ? `<span style="opacity:0.5;font-size:11px"> (filtrado de ${totalActive})</span>` : '';
+    const filtrado = (areaFilters[filterKey].size > 0 || stateFilters[filterKey] !== 'all')
+        ? `<span style="opacity:0.5;font-size:11px"> (filtrado de ${totalActive})</span>` : '';
 
     container.innerHTML = `
         <div class="summary-header">
@@ -254,7 +303,7 @@ function renderList(domain, containerId, entities, conn, areas, entities_reg, de
         document.getElementById(`off-${domain}`).onclick = () => {
             allIds.forEach(id => {
                 const room = getAreaInfo(id, areas, entities_reg, devices_reg);
-                if (entities[id].state === 'on' && isRoomVisible(room, filterKey)) {
+                if (entities[id].state === 'on' && isRoomVisible(room, filterKey) && isStateVisible(entities[id].state, filterKey)) {
                     callService(conn, domain, "turn_off", { entity_id: id });
                 }
             });
@@ -265,7 +314,9 @@ function renderList(domain, containerId, entities, conn, areas, entities_reg, de
     allRooms.forEach(room => {
         if (!isRoomVisible(room, filterKey)) return;
 
-        const roomEntities = grouped[room];
+        const roomEntities = grouped[room].filter(item => isStateVisible(item.state.state, filterKey));
+        if (roomEntities.length === 0) return;
+
         const activeInRoom = roomEntities.filter(item => item.state.state === 'on');
         const rHeader = document.createElement('div');
         rHeader.className = 'room-section';
