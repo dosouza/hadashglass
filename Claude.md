@@ -73,6 +73,9 @@ Usa protocolo nativo `/api/websocket`. Subscribe envia:
 - `c` (changed) — mudanças, formato diff com `+`
 Ambos processados no `ipad-legacy.js`
 
+### Entidades ocultas pelo HA
+Quando um `switch` é exposto como `light` via entidade auxiliar, o HA marca o switch original com `hidden_by: "integration"`. O dashboard filtra essas entidades via `isEntityVisible()` (legacy) e checagem inline (Pro) antes de renderizar qualquer lista ou card.
+
 ---
 
 ## 📋 Funcionalidades Implementadas
@@ -82,17 +85,24 @@ Ambos processados no `ipad-legacy.js`
 - ✅ Clima via AccuWeather
 - ✅ Auto Mapping por Áreas do HA
 - ✅ Simplificação de nomes
-- ✅ Navegação lateral (Home, Luzes, Tomadas, Sistema)
+- ✅ Navegação lateral: apenas **Home** e **Ajustes**
 - ✅ Filtro de Áreas com chips (multi-select, persistido)
+- ✅ Filtro de Status com chips: On / Off (persistido por página)
 - ✅ Ícones SVG: lâmpada amarela (on) / com risco vermelho (off)
 - ✅ Nome do card colorido: amarelo = on, cinza = off
 - ✅ ⭐ Estrela Favorito nas listas → adiciona/remove do Home
-- ✅ Desligar Tudo / Desligar Sala (respeitam filtro)
+- ✅ Desligar Tudo / Desligar Sala (respeitam ambos os filtros)
 - ✅ Reconexão automática WebSocket (5s)
-- ✅ LocalStorage para favoritos e filtros
+- ✅ LocalStorage para favoritos, filtros de área e filtros de status
+- ✅ Ocultar entidades com `hidden_by` / `disabled_by` do entity registry
+
+### Página Ajustes — 3 abas:
+- ✅ **💡 Luzes** — lista com filtro de área + filtro de status (Todas/Acesas/Apagadas)
+- ✅ **🔌 Tomadas** — lista com filtro de área + filtro de status (Todos/Ligados/Desligados)
+- ✅ **⚙️ Sistema** — contadores dinâmicos (só Pro) / info estática (iPad)
 
 ### Só versão Pro:
-- ✅ Aba Sistema com contadores dinâmicos
+- ✅ Aba Sistema com contadores dinâmicos (entidades, áreas)
 
 ### Só versão iPad:
 - ✅ Grid responsivo (cards 110px)
@@ -106,8 +116,9 @@ Ambos processados no `ipad-legacy.js`
 | O que | Por quê |
 |---|---|
 | Aba "Config. Home" | Substituída pela ⭐ Estrela Favorito |
-| `iniciarTabs()` iPad | Sem tabs após remoção |
-| `renderSettings()` | Não chamada no ciclo de render |
+| `renderSettings()` Pro | Não chamada no ciclo de render |
+| Nav icons 💡 Luzes e 🔌 Tomadas | Movidos para abas dentro de Ajustes |
+| Pages `page-lights` e `page-switches` | Conteúdo migrado para tabs em `page-settings` |
 
 ---
 
@@ -124,6 +135,7 @@ Ambos processados no `ipad-legacy.js`
 | 404 no HA | Cache do browser com URL antiga | Aba anônima / limpar cache |
 | Git divergente Pi/Mac | Moveu pasta do iCloud para Documentos | `git fetch && git reset --hard origin/main` |
 | Git case-sensitive Mac | Mac não detecta maiúscula→minúscula | `git mv` com nome temporário |
+| Switch oculto aparecendo como Tomada | `hidden_by` não era verificado | Filtro por `hidden_by` / `disabled_by` no entity registry |
 
 ---
 
@@ -131,29 +143,33 @@ Ambos processados no `ipad-legacy.js`
 
 ### `index.html`
 - Título: `HAdashglass Pro v3.1`
-- Pages: `page-home`, `page-lights`, `page-switches`, `page-settings`
-- Settings: só Sistema (sem Config Home, sem tabs)
+- Pages: `page-home`, `page-settings`
+- Settings: abas 💡 Luzes, 🔌 Tomadas, ⚙️ Sistema
 - Scripts: `script.js?v=3.0.1` (type="module")
 
 ### `script.js` (v3.2.0)
 - Funções: `getLightIcon`, `getEntityIcon`, `toggleFavorite`, `renderHome`, `renderList`, `updateWeather`, `updateSystemTab`, `init`
-- Removidas: `renderSettings`
-- `areaFilters`: Sets para `home`, `lights`, `switches`
+- Filtros: `areaFilters` (Set), `stateFilters` (string: 'all'|'on'|'off')
+- Funções de filtro: `renderAreaFilter`, `renderStateFilter`, `isRoomVisible`, `isStateVisible`
+- Oculta entidades com `hidden_by` / `disabled_by`
 
 ### `ipad.html`
-- Pages: `page-home`, `page-lights`, `page-switches`, `page-settings`
-- Settings: conteúdo direto sem tabs nem Config Home
+- Pages: `page-home`, `page-settings`
+- Settings: abas 💡 Luzes, 🔌 Tomadas, ⚙️ Sistema (estático)
 - Scripts: `config-legacy.js` + `ipad-legacy.js` (sem type="module")
-- CSS override: grid responsivo, header compacto, estrela
+- CSS override: grid responsivo, header compacto, sem backdrop-filter
 
 ### `ipad-legacy.js` (v2.1.0)
-- Funções: `getLightIcon`, `getIcon`, `toggleFavorite`, `renderHome`, `renderList`, `updateWeather`, `renderAll`, `connect`
-- Removidas: `renderSettings`, `iniciarTabs`
+- Funções: `isEntityVisible`, `getLightIcon`, `getIcon`, `toggleFavorite`, `renderHome`, `renderList`, `updateWeather`, `renderAll`, `connect`
+- Funções de filtro: `renderAreaFilter`, `renderStateFilter`, `isRoomVisible`, `isStateVisible`, `hasAnyFilter`
+- Nav: `iniciarNavegacao` + `iniciarTabs`
 - WebSocket: processa `evt.a` e `evt.c`, formato diff `+`
-- `areaFilters`: objetos `{}` (sem Set)
+- `areaFilters`: objetos `{}` (sem Set); `stateFilters`: objetos com string
 
 ### `style.css` (v3.2.0)
-- Adicionado: `.star-btn`, `.star-btn.star-on`, `.area-chip`, `.area-filter-bar`
+- `.star-btn`, `.star-btn.star-on`
+- `.area-chip`, `.area-filter-bar`
+- `.filter-group` — wrapper que empilha filtro de área + filtro de status
 
 ---
 
