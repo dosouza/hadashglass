@@ -177,10 +177,16 @@ function getEntityIcon(domain, state) {
     return `<span style="font-size:30px">📱</span>`;
 }
 
+// FAVORITOS — lê da entidade HA
+function getFavorites(entities) {
+    const fav = entities['sensor.hadashglass_favorites'];
+    return (fav && fav.attributes && fav.attributes.entities) ? fav.attributes.entities : [];
+}
+
 // RENDER HOME
 function renderHome(entities, conn, areas, entities_reg, devices_reg) {
     const grid = document.getElementById('dashboard-grid');
-    const visibleIds = JSON.parse(localStorage.getItem('visible_home_entities') || "[]");
+    const visibleIds = getFavorites(entities);
 
     const grouped = {};
     visibleIds.forEach(id => {
@@ -247,18 +253,20 @@ function renderHome(entities, conn, areas, entities_reg, devices_reg) {
     });
 }
 
-// FAVORITO — adiciona/remove do Home
-function toggleFavorite(entityId, starEl) {
-    let visibleIds = JSON.parse(localStorage.getItem('visible_home_entities') || '[]');
-    const isFav = visibleIds.includes(entityId);
-    if (isFav) {
-        visibleIds = visibleIds.filter(v => v !== entityId);
-        starEl.classList.remove('star-on');
-    } else {
-        visibleIds.push(entityId);
-        starEl.classList.add('star-on');
-    }
-    localStorage.setItem('visible_home_entities', JSON.stringify(visibleIds));
+// FAVORITO — adiciona/remove do Home, salva no HA
+function toggleFavorite(entityId, starEl, currentFavorites) {
+    const isFav = currentFavorites.includes(entityId);
+    const newList = isFav
+        ? currentFavorites.filter(v => v !== entityId)
+        : [...currentFavorites, entityId];
+
+    isFav ? starEl.classList.remove('star-on') : starEl.classList.add('star-on');
+
+    fetch(`${HA_CONFIG.URL}/api/states/sensor.hadashglass_favorites`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${HA_CONFIG.TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ state: 'active', attributes: { entities: newList } })
+    });
 }
 
 // RENDER LISTA (Luzes / Tomadas)
@@ -334,10 +342,10 @@ function renderList(domain, containerId, entities, conn, areas, entities_reg, de
         }
         listContent.appendChild(rHeader);
 
+        const favList = getFavorites(entities);
         roomEntities.forEach(item => {
             const displayName = simplifyName(item.state.attributes.friendly_name, room, item.id);
-            const visibleIds = JSON.parse(localStorage.getItem('visible_home_entities') || '[]');
-            const isFav = visibleIds.includes(item.id);
+            const isFav = favList.includes(item.id);
             const itemDiv = document.createElement('div');
             itemDiv.className = 'list-item';
             itemDiv.innerHTML = `
@@ -350,75 +358,16 @@ function renderList(domain, containerId, entities, conn, areas, entities_reg, de
             itemDiv.querySelector('input').onchange = () =>
                 callService(conn, domain, item.state.state === 'on' ? 'turn_off' : 'turn_on', { entity_id: item.id });
             itemDiv.querySelector('.star-btn').onclick = function() {
-                toggleFavorite(item.id, this);
+                toggleFavorite(item.id, this, favList);
             };
             listContent.appendChild(itemDiv);
         });
     });
 }
 
-// RENDER SETTINGS
-function renderSettings(entities, areas, entities_reg, devices_reg) {
-    const container = document.getElementById('settings-entities-list');
-    if (!container) return;
-    let visibleIds = JSON.parse(localStorage.getItem('visible_home_entities') || "[]");
-    const allEntities = Object.keys(entities).filter(id => {
-        const reg = entities_reg.find(e => e.entity_id === id);
-        return reg && !reg.hidden_by && !reg.disabled_by;
-    });
-
-    const groupedSettings = {};
-    allEntities.forEach(id => {
-        const room = getAreaInfo(id, areas, entities_reg, devices_reg);
-        if (!groupedSettings[room]) groupedSettings[room] = [];
-        groupedSettings[room].push(id);
-    });
-
-    const allRooms = Object.keys(groupedSettings).sort();
-    renderAreaFilter('filter-settings', allRooms, 'settings', () => renderSettings(entities, areas, entities_reg, devices_reg));
-
-    container.innerHTML = '';
-    allRooms.forEach(room => {
-        if (!isRoomVisible(room, 'settings')) return;
-
-        const section = document.createElement('div');
-        section.className = 'room-section';
-        section.innerText = room;
-        container.appendChild(section);
-
-        groupedSettings[room].sort().forEach(id => {
-            const isVisible = visibleIds.includes(id);
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'list-item';
-            const state = entities[id].state;
-            const isOn = state === 'on';
-            const stateColor = isOn ? '#00e676' : state === 'off' ? 'rgba(255,255,255,0.35)' : '#6dd5fa';
-            itemDiv.innerHTML = `
-                <div style="max-width:70%;display:flex;flex-direction:column;gap:2px">
-                    <div style="font-size:13px;display:flex;align-items:center;gap:8px">
-                        ${entities[id].attributes.friendly_name || id}
-                        <span style="font-size:10px;font-weight:700;color:${stateColor};background:rgba(255,255,255,0.06);padding:2px 7px;border-radius:6px;letter-spacing:0.04em">${state}</span>
-                    </div>
-                    <div style="font-size:10px;opacity:0.5">${id}</div>
-                </div>
-                <label class="switch switch-visibility">
-                    <input type="checkbox" ${isVisible ? 'checked' : ''}>
-                    <span class="slider"></span>
-                </label>
-            `;
-            itemDiv.querySelector('input').onchange = (e) => {
-                if (e.target.checked) { if (!visibleIds.includes(id)) visibleIds.push(id); }
-                else { visibleIds = visibleIds.filter(v => v !== id); }
-                localStorage.setItem('visible_home_entities', JSON.stringify(visibleIds));
-            };
-            container.appendChild(itemDiv);
-        });
-    });
-}
-
 // SISTEMA
 function updateSystemTab(entities, areas) {
-    const visibleIds = JSON.parse(localStorage.getItem('visible_home_entities') || "[]");
+    const visibleIds = getFavorites(entities);
     const el = id => document.getElementById(id);
     if (el('sys-total-count'))   el('sys-total-count').innerText   = Object.keys(entities).length;
     if (el('sys-visible-count')) el('sys-visible-count').innerText = visibleIds.filter(id => entities[id]).length;

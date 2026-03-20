@@ -385,13 +385,18 @@ function renderAreaFilter(filterId, allRooms, filterKey, renderCallback) {
     bar.scrollLeft = scrollLeft;
 }
 
+// ── FAVORITOS — lê da entidade HA ─────────────────────────────
+function getFavorites() {
+    var fav = allEntities['sensor.hadashglass_favorites'];
+    return (fav && fav.attributes && fav.attributes.entities) ? fav.attributes.entities : [];
+}
+
 // ── RENDER: HOME ──────────────────────────────────────────────
 function renderHome() {
     var grid = document.getElementById('dashboard-grid');
     if (!grid) return;
 
-    var visibleIds = [];
-    try { visibleIds = JSON.parse(localStorage.getItem('visible_home_entities') || '[]'); } catch(e) {}
+    var visibleIds = getFavorites();
 
     var grouped = {};
     for (var i = 0; i < visibleIds.length; i++) {
@@ -525,9 +530,8 @@ function renderList(domain, containerId) {
             var isOn = ent.state === 'on';
             if (isOn) activeInRoom++;
             var label = simplifyName(ent.attributes ? ent.attributes.friendly_name : null, room, id);
-            var visIds = [];
-            try { visIds = JSON.parse(localStorage.getItem('visible_home_entities') || '[]'); } catch(e) {}
-            var isFav = visIds.indexOf(id) >= 0;
+            var favIds = getFavorites();
+            var isFav = favIds.indexOf(id) >= 0;
             roomHtml += '<div class="list-item">' +
                 '<span>' + label + '</span>' +
                 '<div style="display:flex;align-items:center;gap:12px">' +
@@ -642,21 +646,32 @@ function toggleSwitch(domain, entityId, checkbox) {
 }
 
 function toggleFavorite(entityId, starEl) {
-    var visibleIds = [];
-    try { visibleIds = JSON.parse(localStorage.getItem('visible_home_entities') || '[]'); } catch(e) {}
-    var isFav = visibleIds.indexOf(entityId) >= 0;
+    var currentFavs = getFavorites();
+    var isFav = currentFavs.indexOf(entityId) >= 0;
+    var newList = [];
     if (isFav) {
-        var newIds = [];
-        for (var i = 0; i < visibleIds.length; i++) {
-            if (visibleIds[i] !== entityId) newIds.push(visibleIds[i]);
+        for (var i = 0; i < currentFavs.length; i++) {
+            if (currentFavs[i] !== entityId) newList.push(currentFavs[i]);
         }
-        visibleIds = newIds;
         starEl.classList.remove('star-on');
     } else {
-        visibleIds.push(entityId);
+        for (var i = 0; i < currentFavs.length; i++) newList.push(currentFavs[i]);
+        newList.push(entityId);
         starEl.classList.add('star-on');
     }
-    localStorage.setItem('visible_home_entities', JSON.stringify(visibleIds));
+
+    // Atualiza local imediatamente (otimista)
+    if (!allEntities['sensor.hadashglass_favorites']) {
+        allEntities['sensor.hadashglass_favorites'] = { attributes: {} };
+    }
+    allEntities['sensor.hadashglass_favorites'].attributes.entities = newList;
+
+    // Salva no HA via REST
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', HA_URL + '/api/states/sensor.hadashglass_favorites', true);
+    xhr.setRequestHeader('Authorization', 'Bearer ' + HA_TOKEN);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send(JSON.stringify({ state: 'active', attributes: { entities: newList } }));
 }
 
 function desligarTudo(domain) {
