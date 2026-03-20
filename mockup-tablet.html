@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HAdashglass P7 — Mockup</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0d0f1a;
+    color: #fff;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+  }
+
+  /* ── BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 80%, rgba(120,60,200,0.35) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 60% at 80% 20%, rgba(200,60,80,0.3) 0%, transparent 70%),
+      radial-gradient(ellipse 70% 40% at 50% 50%, rgba(30,60,120,0.4) 0%, transparent 80%);
+    z-index: 0;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    position: relative;
+    z-index: 10;
+    width: 64px;
+    height: 100vh;
+    background: rgba(255,255,255,0.04);
+    border-right: 1px solid rgba(255,255,255,0.07);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+    gap: 8px;
+    backdrop-filter: blur(20px);
+    flex-shrink: 0;
+  }
+
+  .nav-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+    color: rgba(255,255,255,0.45);
+  }
+
+  .nav-icon.active {
+    background: rgba(255,180,0,0.18);
+    color: #ffb400;
+    box-shadow: 0 0 0 1px rgba(255,180,0,0.3);
+  }
+
+  .nav-spacer { flex: 1; }
+
+  /* ── MAIN ── */
+  .main {
+    position: relative;
+    z-index: 5;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 28px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+  }
+
+  .clock-section h2 {
+    font-size: 42px;
+    font-weight: 200;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+
+  .clock-section .date {
+    font-size: 13px;
+    opacity: 0.5;
+    margin-top: 3px;
+    font-weight: 400;
+  }
+
+  .weather-widget {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 18px;
+    padding: 12px 20px;
+    backdrop-filter: blur(12px);
+  }
+
+  .weather-icon { font-size: 30px; }
+
+  .weather-info .temp {
+    font-size: 24px;
+    font-weight: 300;
+  }
+
+  .weather-info .details {
+    font-size: 11px;
+    opacity: 0.5;
+    margin-top: 2px;
+  }
+
+  .weather-info .condition {
+    font-size: 12px;
+    opacity: 0.6;
+  }
+
+  /* ── PAGE ── */
+  .page {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 28px;
+    display: none;
+  }
+
+  .page.active { display: flex; flex-direction: column; gap: 16px; }
+
+  /* ── HOME PAGE — dois painéis lado a lado ── */
+  .home-panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    flex: 1;
+  }
+
+  .home-panel {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 16px;
+    backdrop-filter: blur(12px);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+  }
+
+  .panel-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    opacity: 0.4;
+    text-transform: uppercase;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .panel-title .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ffb400;
+  }
+
+  /* Card no Home — horizontal, tablet-friendly */
+  .home-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-height: 60px;
+  }
+
+  .home-card:hover {
+    background: rgba(255,255,255,0.09);
+    border-color: rgba(255,255,255,0.15);
+  }
+
+  .home-card.on {
+    background: rgba(255,180,0,0.10);
+    border-color: rgba(255,180,0,0.25);
+  }
+
+  .card-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.06);
+  }
+
+  .home-card.on .card-icon {
+    background: rgba(255,180,0,0.15);
+  }
+
+  .card-info { flex: 1; }
+
+  .card-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.5);
+  }
+
+  .home-card.on .card-name { color: #ffb400; }
+
+  .card-area {
+    font-size: 11px;
+    opacity: 0.35;
+    margin-top: 2px;
+  }
+
+  .card-toggle {
+    width: 42px;
+    height: 24px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.1);
+    position: relative;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  .home-card.on .card-toggle {
+    background: #ffb400;
+  }
+
+  .card-toggle::after {
+    content: '';
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    transition: left 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+
+  .home-card.on .card-toggle::after { left: 21px; }
+
+  /* ── AJUSTES ── */
+  .settings-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 3px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 14px;
+    width: fit-content;
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+
+  .tab-btn {
+    padding: 8px 20px;
+    border-radius: 11px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    color: rgba(255,255,255,0.45);
+    transition: all 0.2s;
+  }
+
+  .tab-btn.active {
+    background: rgba(255,180,0,0.18);
+    color: #ffb400;
+  }
+
+  /* ── FILTROS ── */
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    cursor: pointer;
+    white-space: nowrap;
+    color: rgba(255,255,255,0.6);
+    transition: all 0.2s;
+  }
+
+  .chip.active {
+    background: rgba(255,180,0,0.18);
+    border-color: rgba(255,180,0,0.4);
+    color: #ffb400;
+  }
+
+  /* ── LISTA ── */
+  .list-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    font-size: 13px;
+  }
+
+  .list-summary strong { color: #ffb400; font-size: 16px; }
+
+  .btn-off-all {
+    padding: 7px 18px;
+    border-radius: 10px;
+    background: rgba(255,60,60,0.15);
+    border: 1px solid rgba(255,60,60,0.3);
+    color: rgba(255,120,120,0.9);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .list-container {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .room-header {
+    padding: 10px 18px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.4;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .btn-off-mini {
+    padding: 4px 12px;
+    border-radius: 8px;
+    background: rgba(255,60,60,0.12);
+    border: 1px solid rgba(255,60,60,0.2);
+    color: rgba(255,120,120,0.8);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  /* ── ITEM DA LISTA — KEY CHANGE: 2 estrelas ── */
+  .list-item {
+    display: flex;
+    align-items: center;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    gap: 16px;
+    transition: background 0.15s;
+  }
+
+  .list-item:last-child { border-bottom: none; }
+  .list-item:hover { background: rgba(255,255,255,0.03); }
+
+  .item-name {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .item-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  /* Grupo das estrelas com label */
+  .star-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .star-label {
+    font-size: 9px;
+    opacity: 0.35;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .star-btn {
+    font-size: 20px;
+    cursor: pointer;
+    color: rgba(255,255,255,0.2);
+    line-height: 1;
+    transition: color 0.2s, transform 0.15s;
+  }
+
+  .star-btn:hover { transform: scale(1.2); }
+  .star-btn.on { color: #ffb400; }
+
+  /* Toggle switch */
+  .toggle-wrap {
+    position: relative;
+    width: 48px;
+    height: 26px;
+  }
+
+  .toggle-wrap input { opacity: 0; width: 0; height: 0; position: absolute; }
+
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    border-radius: 13px;
+    background: rgba(255,255,255,0.12);
+    transition: background 0.25s;
+    cursor: pointer;
+  }
+
+  .toggle-slider::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    top: 3px;
+    left: 3px;
+    transition: left 0.25s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  }
+
+  .toggle-wrap input:checked + .toggle-slider { background: #ffb400; }
+  .toggle-wrap input:checked + .toggle-slider::after { left: 25px; }
+
+  /* Separador visual entre as duas estrelas */
+  .stars-divider {
+    width: 1px;
+    height: 28px;
+    background: rgba(255,255,255,0.08);
+  }
+
+  /* ── SISTEMA ── */
+  .sys-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .sys-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .sys-card .sys-num {
+    font-size: 32px;
+    font-weight: 200;
+    color: #ffb400;
+  }
+
+  .sys-card .sys-label {
+    font-size: 12px;
+    opacity: 0.45;
+    margin-top: 4px;
+  }
+
+  /* Scrollbar sutil */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="nav-icon active" onclick="showPage('home')">🏠</div>
+  <div class="nav-spacer"></div>
+  <div class="nav-icon" onclick="showPage('settings')">⚙️</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="clock-section">
+      <h2 id="clock">19:20</h2>
+      <div class="date">sexta-feira, 20 de março</div>
+    </div>
+    <div class="weather-widget">
+      <div class="weather-icon">⛅</div>
+      <div class="weather-info">
+        <div class="condition">Parcialmente nublado</div>
+        <div class="temp">26°C</div>
+        <div class="details">💧 72% | 🌧️ 15%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOME PAGE -->
+  <div class="page active" id="page-home">
+    <div class="home-panels">
+
+      <!-- Painel P7 — favoritos do tablet -->
+      <div class="home-panel">
+        <div class="panel-title">
+          <div class="dot"></div>
+          Favoritos P7
+        </div>
+
+        <div class="home-card on">
+          <div class="card-icon">💡</div>
+          <div class="card-info">
+            <div class="card-name">Sanca Paralelo</div>
+            <div class="card-area">Quarto Casal</div>
+          </div>
+          <div class="card-toggle"></div>
+        </div>
+
+        <div class="home-card on">
+          <div class="card-icon">💡</div>
+          <div class="card-info">
+            <div class="card-name">Sanca</div>
+            <div class="card-area">Quarto Casal</div>
+          </div>
+          <div class="card-toggle"></div>
+        </div>
+
+        <div class="home-card">
+          <div class="card-icon">💡</div>
+          <div class="card-info">
+            <div class="card-name">Teto</div>
+            <div class="card-area">Banheiro Casal</div>
+          </div>
+          <div class="card-toggle"></div>
+        </div>
+
+        <div class="home-card on">
+          <div class="card-icon">🟡</div>
+          <div class="card-info">
+            <div class="card-name">Garagem</div>
+            <div class="card-area">Fundos</div>
+          </div>
+          <div class="card-toggle"></div>
+        </div>
+
+        <div class="home-card">
+          <div class="card-icon">🟡</div>
+          <div class="card-info">
+            <div class="card-name">Portão</div>
+            <div class="card-area">Fundos</div>
+          </div>
+          <div class="card-toggle"></div>
+        </div>
+
+        <div class="home-card">
+          <div class="card-icon">💡</div>
+          <div class="card-info">
+            <div class="card-name">Estar</div>
+            <div class="card-area">Sala</div>
+          </div>
+          <div class="card-toggle"></div>
+        </div>
+      </div>
+
+      <!-- Painel Home — favoritos compartilhados -->
+      <div class="home-panel">
+        <div class="panel-title">
+          <div class="dot" style="background:#6dd5fa"></div>
+          Favoritos Home
+        </div>
+
+        <div class="home-card on">
+          <div class="card-icon">💡</div>
+          <div class="card-info">
+            <div class="card-name">Sanca Paralelo</div>
+            <div class="card-area">Quarto Casal</div>
+          </div>
+          <div class="card-toggle"></div>
+        </div>
+
+        <div class="home-card on">
+          <div class="card-icon">🟡</div>
+          <div class="card-info">
+            <div class="card-name">Garagem</div>
+            <div class="card-area">Fundos</div>
+          </div>
+          <div class="card-toggle"></div>
+        </div>
+
+        <div class="home-card on">
+          <div class="card-icon">🟡</div>
+          <div class="card-info">
+            <div class="card-name">Fundos</div>
+            <div class="card-area">Área Externa</div>
+          </div>
+          <div class="card-toggle"></div>
+        </div>
+
+        <div class="home-card">
+          <div class="card-icon">💡</div>
+          <div class="card-info">
+            <div class="card-name">Video</div>
+            <div class="card-area">Sala</div>
+          </div>
+          <div class="card-toggle"></div>
+        </div>
+
+        <div class="home-card">
+          <div class="card-icon">💡</div>
+          <div class="card-info">
+            <div class="card-name">Escada</div>
+            <div class="card-area">Corredor</div>
+          </div>
+          <div class="card-toggle"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- AJUSTES PAGE -->
+  <div class="page" id="page-settings">
+
+    <!-- Tabs -->
+    <div class="settings-tabs">
+      <div class="tab-btn active" onclick="showTab('tab-lights', this)">💡 Luzes</div>
+      <div class="tab-btn" onclick="showTab('tab-switches', this)">🔌 Tomadas</div>
+      <div class="tab-btn" onclick="showTab('tab-system', this)">⚙️ Sistema</div>
+    </div>
+
+    <!-- Tab Luzes -->
+    <div id="tab-lights" style="display:flex;flex-direction:column;gap:12px;">
+
+      <!-- Filtro áreas -->
+      <div class="filter-bar">
+        <div class="chip active">Todas</div>
+        <div class="chip">Banheiro Casal</div>
+        <div class="chip">Quarto Casal</div>
+        <div class="chip">Sala</div>
+        <div class="chip">Cozinha</div>
+        <div class="chip">Corredor 1o</div>
+        <div class="chip">Lavanderia</div>
+      </div>
+
+      <!-- Filtro status -->
+      <div class="filter-bar">
+        <div class="chip">Todas</div>
+        <div class="chip active">Acesas</div>
+        <div class="chip">Apagadas</div>
+      </div>
+
+      <!-- Sumário -->
+      <div class="list-summary">
+        <span><strong>7</strong> Luzes ativas</span>
+        <button class="btn-off-all">Desligar Tudo</button>
+      </div>
+
+      <!-- Lista com DUAS ESTRELAS -->
+      <div class="list-container">
+
+        <div class="room-header">
+          Banheiro Casal
+          <button class="btn-off-mini">Desligar Sala</button>
+        </div>
+
+        <div class="list-item">
+          <div class="item-name">Teto</div>
+          <div class="item-actions">
+
+            <!-- ⭐ P7 -->
+            <div class="star-group">
+              <div class="star-label">P7</div>
+              <div class="star-btn">★</div>
+            </div>
+
+            <div class="stars-divider"></div>
+
+            <!-- ⭐ Home -->
+            <div class="star-group">
+              <div class="star-label">Home</div>
+              <div class="star-btn on">★</div>
+            </div>
+
+            <label class="toggle-wrap">
+              <input type="checkbox" checked>
+              <div class="toggle-slider"></div>
+            </label>
+          </div>
+        </div>
+
+        <div class="room-header">
+          Quarto Casal
+          <button class="btn-off-mini">Desligar Sala</button>
+        </div>
+
+        <div class="list-item">
+          <div class="item-name">Sanca Paralelo</div>
+          <div class="item-actions">
+            <div class="star-group">
+              <div class="star-label">P7</div>
+              <div class="star-btn on">★</div>
+            </div>
+            <div class="stars-divider"></div>
+            <div class="star-group">
+              <div class="star-label">Home</div>
+              <div class="star-btn on">★</div>
+            </div>
+            <label class="toggle-wrap">
+              <input type="checkbox" checked>
+              <div class="toggle-slider"></div>
+            </label>
+          </div>
+        </div>
+
+        <div class="list-item">
+          <div class="item-name">Sanca</div>
+          <div class="item-actions">
+            <div class="star-group">
+              <div class="star-label">P7</div>
+              <div class="star-btn on">★</div>
+            </div>
+            <div class="stars-divider"></div>
+            <div class="star-group">
+              <div class="star-label">Home</div>
+              <div class="star-btn">★</div>
+            </div>
+            <label class="toggle-wrap">
+              <input type="checkbox" checked>
+              <div class="toggle-slider"></div>
+            </label>
+          </div>
+        </div>
+
+        <div class="list-item">
+          <div class="item-name">Embutido</div>
+          <div class="item-actions">
+            <div class="star-group">
+              <div class="star-label">P7</div>
+              <div class="star-btn">★</div>
+            </div>
+            <div class="stars-divider"></div>
+            <div class="star-group">
+              <div class="star-label">Home</div>
+              <div class="star-btn">★</div>
+            </div>
+            <label class="toggle-wrap">
+              <input type="checkbox">
+              <div class="toggle-slider"></div>
+            </label>
+          </div>
+        </div>
+
+        <div class="room-header">
+          Sala
+        </div>
+
+        <div class="list-item">
+          <div class="item-name">Estar</div>
+          <div class="item-actions">
+            <div class="star-group">
+              <div class="star-label">P7</div>
+              <div class="star-btn on">★</div>
+            </div>
+            <div class="stars-divider"></div>
+            <div class="star-group">
+              <div class="star-label">Home</div>
+              <div class="star-btn">★</div>
+            </div>
+            <label class="toggle-wrap">
+              <input type="checkbox" checked>
+              <div class="toggle-slider"></div>
+            </label>
+          </div>
+        </div>
+
+        <div class="list-item">
+          <div class="item-name">Video</div>
+          <div class="item-actions">
+            <div class="star-group">
+              <div class="star-label">P7</div>
+              <div class="star-btn">★</div>
+            </div>
+            <div class="stars-divider"></div>
+            <div class="star-group">
+              <div class="star-label">Home</div>
+              <div class="star-btn on">★</div>
+            </div>
+            <label class="toggle-wrap">
+              <input type="checkbox">
+              <div class="toggle-slider"></div>
+            </label>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Tab Tomadas -->
+    <div id="tab-switches" style="display:none;flex-direction:column;gap:12px;">
+      <div style="padding:40px;text-align:center;opacity:0.4">
+        (mesmo layout da aba Luzes, com ⭐ P7 | ⭐ Home por item)
+      </div>
+    </div>
+
+    <!-- Tab Sistema -->
+    <div id="tab-system" style="display:none;flex-direction:column;gap:12px;">
+      <div class="sys-grid">
+        <div class="sys-card">
+          <div class="sys-num">48</div>
+          <div class="sys-label">Entidades</div>
+        </div>
+        <div class="sys-card">
+          <div class="sys-num">5</div>
+          <div class="sys-label">Favoritos P7</div>
+        </div>
+        <div class="sys-card">
+          <div class="sys-num">4</div>
+          <div class="sys-label">Favoritos Home</div>
+        </div>
+        <div class="sys-card">
+          <div class="sys-num">12</div>
+          <div class="sys-label">Áreas</div>
+        </div>
+        <div class="sys-card">
+          <div class="sys-num">7</div>
+          <div class="sys-label">Luzes On</div>
+        </div>
+        <div class="sys-card">
+          <div class="sys-num">3</div>
+          <div class="sys-label">Tomadas On</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div><!-- /main -->
+
+<script>
+  // Relógio
+  function tick() {
+    var now = new Date();
+    var h = now.getHours();  h = h<10?'0'+h:h;
+    var m = now.getMinutes(); m = m<10?'0'+m:m;
+    document.getElementById('clock').innerText = h+':'+m;
+  }
+  setInterval(tick, 1000); tick();
+
+  // Navegação
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+    document.querySelectorAll('.nav-icon').forEach(function(i){ i.classList.remove('active'); });
+    document.getElementById('page-'+id).classList.add('active');
+    event.currentTarget.classList.add('active');
+  }
+
+  // Tabs
+  function showTab(tabId, btn) {
+    document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    var tabs = ['tab-lights','tab-switches','tab-system'];
+    tabs.forEach(function(t){
+      var el = document.getElementById(t);
+      el.style.display = t === tabId ? 'flex' : 'none';
+    });
+  }
+
+  // Toggle cards home
+  document.querySelectorAll('.home-card').forEach(function(card){
+    card.querySelector('.card-toggle').addEventListener('click', function(e){
+      e.stopPropagation();
+      card.classList.toggle('on');
+    });
+    card.addEventListener('click', function(){
+      card.classList.toggle('on');
+    });
+  });
+
+  // Toggle estrelas
+  document.querySelectorAll('.star-btn').forEach(function(star){
+    star.addEventListener('click', function(e){
+      e.stopPropagation();
+      star.classList.toggle('on');
+    });
+  });
+</script>
+</body>
+</html>
