@@ -46,8 +46,6 @@
 <body>
     <div class="sidebar">
         <div class="nav-icon active" data-target="page-home">🏠</div>
-        <div class="nav-icon" data-target="page-lights">💡</div>
-        <div class="nav-icon" data-target="page-switches">🔌</div>
         <div class="nav-spacer" style="flex:1"></div>
         <div class="nav-icon" data-target="page-settings">⚙️</div>
     </div>
@@ -85,29 +83,37 @@
             </div>
         </div>
 
-        <div id="page-lights" class="page">
-            <div class="filter-group">
-                <div class="area-filter-bar" id="filter-lights"></div>
-                <div class="area-filter-bar" id="state-filter-lights"></div>
-            </div>
-            <div id="lights-list"></div>
-        </div>
-
-        <div id="page-switches" class="page">
-            <div class="filter-group">
-                <div class="area-filter-bar" id="filter-switches"></div>
-                <div class="area-filter-bar" id="state-filter-switches"></div>
-            </div>
-            <div id="switches-list"></div>
-        </div>
-
         <div id="page-settings" class="page">
-            <div class="list-container">
-                <div class="list-item"><span>Dispositivo</span><span style="opacity:0.6">iPad Legacy</span></div>
-                <div class="list-item"><span>Versão</span><span style="opacity:0.6">2.0.0 — 17/03/2026</span></div>
-                <div class="list-item"><span>Compatibilidade</span><span style="color:#00e676">iOS 10+</span></div>
-                <div class="list-item"><span>ES Modules</span><span style="color:#ff5252">Desativado</span></div>
-                <div class="list-item"><span>Backdrop-filter</span><span style="color:#ff5252">Desativado</span></div>
+            <div class="settings-tabs">
+                <div class="tab-btn active" data-tab="tab-lights">💡 Luzes</div>
+                <div class="tab-btn" data-tab="tab-switches">🔌 Tomadas</div>
+                <div class="tab-btn" data-tab="tab-system">⚙️ Sistema</div>
+            </div>
+
+            <div id="tab-lights" class="tab-content active">
+                <div class="filter-group">
+                    <div class="area-filter-bar" id="filter-lights"></div>
+                    <div class="area-filter-bar" id="state-filter-lights"></div>
+                </div>
+                <div id="lights-list"></div>
+            </div>
+
+            <div id="tab-switches" class="tab-content">
+                <div class="filter-group">
+                    <div class="area-filter-bar" id="filter-switches"></div>
+                    <div class="area-filter-bar" id="state-filter-switches"></div>
+                </div>
+                <div id="switches-list"></div>
+            </div>
+
+            <div id="tab-system" class="tab-content">
+                <div class="list-container">
+                    <div class="list-item"><span>Dispositivo</span><span style="opacity:0.6">iPad Legacy</span></div>
+                    <div class="list-item"><span>Versão</span><span style="opacity:0.6">2.1.0 — 20/03/2026</span></div>
+                    <div class="list-item"><span>Compatibilidade</span><span style="color:#00e676">iOS 10+</span></div>
+                    <div class="list-item"><span>ES Modules</span><span style="color:#ff5252">Desativado</span></div>
+                    <div class="list-item"><span>Backdrop-filter</span><span style="color:#ff5252">Desativado</span></div>
+                </div>
             </div>
         </div>
     </div>

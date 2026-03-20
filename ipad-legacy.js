@@ -50,6 +50,23 @@ setInterval(tickClock, 1000);
 tickClock();
 
 // ── NAVEGAÇÃO ─────────────────────────────────────────────────
+function iniciarTabs() {
+    var buttons = document.querySelectorAll('.tab-btn');
+    for (var i = 0; i < buttons.length; i++) {
+        (function(btn) {
+            btn.addEventListener('click', function() {
+                var allBtns = document.querySelectorAll('.tab-btn');
+                var allContents = document.querySelectorAll('.tab-content');
+                for (var k = 0; k < allBtns.length; k++) allBtns[k].classList.remove('active');
+                for (var k = 0; k < allContents.length; k++) allContents[k].classList.remove('active');
+                btn.classList.add('active');
+                var target = document.getElementById(btn.getAttribute('data-tab'));
+                if (target) target.classList.add('active');
+            });
+        })(buttons[i]);
+    }
+}
+
 function iniciarNavegacao() {
     var icons = document.querySelectorAll('.nav-icon');
     for (var i = 0; i < icons.length; i++) {
@@ -688,5 +705,6 @@ function renderAll() {
 // ── INIT ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
     iniciarNavegacao();
+    iniciarTabs();
     connect();
 });
