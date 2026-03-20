@@ -172,6 +172,15 @@ function subscribeToEntities() {
 }
 
 // ── HELPERS ───────────────────────────────────────────────────
+function isEntityVisible(entityId) {
+    for (var i = 0; i < entitiesReg.length; i++) {
+        if (entitiesReg[i].entity_id === entityId) {
+            return !entitiesReg[i].hidden_by && !entitiesReg[i].disabled_by;
+        }
+    }
+    return true; // sem registro = mostrar
+}
+
 function getAreaName(entityId) {
     var reg = null;
     for (var i = 0; i < entitiesReg.length; i++) {
@@ -371,6 +380,7 @@ function renderHome() {
     for (var i = 0; i < visibleIds.length; i++) {
         var id = visibleIds[i];
         if (!allEntities[id]) continue;
+        if (!isEntityVisible(id)) continue;
         var room = getAreaName(id);
         if (!grouped[room]) grouped[room] = [];
         grouped[room].push(id);
@@ -446,7 +456,7 @@ function renderList(domain, containerId) {
 
     var allIds = [];
     for (var id in allEntities) {
-        if (id.indexOf(domain + '.') === 0) allIds.push(id);
+        if (id.indexOf(domain + '.') === 0 && isEntityVisible(id)) allIds.push(id);
     }
     allIds.sort();
 

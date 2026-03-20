@@ -185,6 +185,8 @@ function renderHome(entities, conn, areas, entities_reg, devices_reg) {
     const grouped = {};
     visibleIds.forEach(id => {
         if (!entities[id]) return;
+        const reg = entities_reg.find(e => e.entity_id === id);
+        if (reg && (reg.hidden_by || reg.disabled_by)) return;
         const room = getAreaInfo(id, areas, entities_reg, devices_reg);
         if (!grouped[room]) grouped[room] = [];
         grouped[room].push({ id, state: entities[id] });
@@ -271,7 +273,11 @@ function renderList(domain, containerId, entities, conn, areas, entities_reg, de
         ? { all: 'Todas', on: 'Acesas', off: 'Apagadas' }
         : { all: 'Todos', on: 'Ligados', off: 'Desligados' };
 
-    const allIds = Object.keys(entities).filter(id => id.startsWith(`${domain}.`));
+    const allIds = Object.keys(entities).filter(id => {
+        if (!id.startsWith(`${domain}.`)) return false;
+        const reg = entities_reg.find(e => e.entity_id === id);
+        return !reg || (!reg.hidden_by && !reg.disabled_by);
+    });
     const grouped = {};
     allIds.forEach(id => {
         const room = getAreaInfo(id, areas, entities_reg, devices_reg);
