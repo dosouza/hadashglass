@@ -37,6 +37,43 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     };
 });
 
+// SIDEBAR COLLAPSE
+(function() {
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('sidebar-toggle');
+    const expandBtn = document.createElement('div');
+    expandBtn.className = 'sidebar-collapsed-btn';
+    expandBtn.textContent = '❯';
+    document.body.appendChild(expandBtn);
+
+    function setSidebarCollapsed(collapsed) {
+        sidebar.classList.toggle('collapsed', collapsed);
+        expandBtn.classList.toggle('visible', collapsed);
+        localStorage.setItem('sidebar_collapsed', collapsed ? '1' : '0');
+    }
+
+    toggleBtn.onclick = () => setSidebarCollapsed(true);
+    expandBtn.onclick = () => setSidebarCollapsed(false);
+
+    if (localStorage.getItem('sidebar_collapsed') === '1') setSidebarCollapsed(true);
+})();
+
+// FILTER TOGGLE
+document.querySelectorAll('.filter-toggle-btn').forEach(btn => {
+    const fgId = btn.dataset.fg;
+    const fg = document.getElementById(fgId);
+    const storageKey = 'fg_hidden_' + fgId;
+
+    function setHidden(hidden) {
+        fg.classList.toggle('fg-hidden', hidden);
+        btn.classList.toggle('fg-collapsed', hidden);
+        localStorage.setItem(storageKey, hidden ? '1' : '0');
+    }
+
+    btn.onclick = () => setHidden(!fg.classList.contains('fg-hidden'));
+    if (localStorage.getItem(storageKey) === '1') setHidden(true);
+});
+
 // RELÓGIO
 setInterval(() => {
     const now = new Date();

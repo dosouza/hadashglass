@@ -7,12 +7,13 @@
     <link rel="stylesheet" href="style.css?v=3.0.0">
 </head>
 <body>
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
         <div class="nav-icon active" data-target="page-home">🏠</div>
         <div class="nav-icon nav-p7" data-target="page-p7">📱</div>
         <div class="nav-icon nav-ipad" data-target="page-ipad">📟</div>
         <div class="nav-spacer" style="flex: 1;"></div>
         <div class="nav-icon" data-target="page-settings">⚙️</div>
+        <div class="sidebar-toggle" id="sidebar-toggle">❮</div>
     </div>
 
     <div class="main-content">
@@ -38,7 +39,8 @@
         </div>
 
         <div id="page-home" class="page active">
-            <div class="filter-group">
+            <div class="filter-group" id="fg-home">
+                <button class="filter-toggle-btn" data-fg="fg-home">⌃</button>
                 <div class="area-filter-bar" id="filter-home"></div>
                 <div class="area-filter-bar" id="state-filter-home"></div>
             </div>
@@ -46,7 +48,8 @@
         </div>
 
         <div id="page-p7" class="page">
-            <div class="filter-group">
+            <div class="filter-group" id="fg-p7">
+                <button class="filter-toggle-btn" data-fg="fg-p7">⌃</button>
                 <div class="area-filter-bar" id="filter-p7"></div>
                 <div class="area-filter-bar" id="state-filter-p7"></div>
             </div>
@@ -54,7 +57,8 @@
         </div>
 
         <div id="page-ipad" class="page">
-            <div class="filter-group">
+            <div class="filter-group" id="fg-ipad">
+                <button class="filter-toggle-btn" data-fg="fg-ipad">⌃</button>
                 <div class="area-filter-bar" id="filter-ipad"></div>
                 <div class="area-filter-bar" id="state-filter-ipad"></div>
             </div>
@@ -69,7 +73,8 @@
             </div>
 
             <div id="tab-lights" class="tab-content active">
-                <div class="filter-group">
+                <div class="filter-group" id="fg-lights">
+                    <button class="filter-toggle-btn" data-fg="fg-lights">⌃</button>
                     <div class="area-filter-bar" id="filter-lights"></div>
                     <div class="area-filter-bar" id="state-filter-lights"></div>
                 </div>
@@ -77,7 +82,8 @@
             </div>
 
             <div id="tab-switches" class="tab-content">
-                <div class="filter-group">
+                <div class="filter-group" id="fg-switches">
+                    <button class="filter-toggle-btn" data-fg="fg-switches">⌃</button>
                     <div class="area-filter-bar" id="filter-switches"></div>
                     <div class="area-filter-bar" id="state-filter-switches"></div>
                 </div>
