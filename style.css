@@ -137,3 +137,126 @@ input:checked + .slider:before { transform: translateX(22px); }
     border-color: var(--active-color);
     color: var(--active-color);
 }
+
+/* ── NAV ICONS ADICIONAIS ── */
+.nav-icon.nav-p7.active   { color: #64b4ff; }
+.nav-icon.nav-ipad.active { color: #a78bfa; }
+
+/* ── P7 GRID ── */
+.p7-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+}
+
+.p7-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 20px;
+    padding: 20px 14px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-height: 110px;
+    justify-content: center;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.p7-card:active { transform: scale(0.96); }
+
+.p7-card.on {
+    background: rgba(100,180,255,0.10);
+    border-color: rgba(100,180,255,0.3);
+    box-shadow: 0 4px 20px rgba(100,180,255,0.08);
+}
+
+.p7-card .p7-card-icon  { display:flex; align-items:center; justify-content:center; height:44px; }
+.p7-card .p7-card-name  { font-size:13px; font-weight:600; color:rgba(255,255,255,0.4); text-align:center; line-height:1.2; }
+.p7-card.on .p7-card-name { color: #64b4ff; }
+.p7-card .p7-card-area  { font-size:10px; opacity:0.3; text-align:center; }
+
+.p7-state-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    position: absolute; top: 12px; right: 12px;
+}
+.p7-card.on .p7-state-dot { background: #64b4ff; box-shadow: 0 0 6px rgba(100,180,255,0.6); }
+
+/* ── IPAD GRID ── */
+.ipad-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.ipad-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 18px;
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-height: 95px;
+    justify-content: center;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.ipad-card:active { transform: scale(0.96); }
+
+.ipad-card.on {
+    background: rgba(167,139,250,0.10);
+    border-color: rgba(167,139,250,0.3);
+    box-shadow: 0 4px 16px rgba(167,139,250,0.08);
+}
+
+.ipad-card .ipad-card-icon { display:flex; align-items:center; justify-content:center; height:38px; }
+.ipad-card .ipad-card-name { font-size:12px; font-weight:600; color:rgba(255,255,255,0.4); text-align:center; line-height:1.2; }
+.ipad-card.on .ipad-card-name { color: #a78bfa; }
+.ipad-card .ipad-card-area { font-size:10px; opacity:0.3; text-align:center; }
+
+.ipad-state-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    position: absolute; top: 10px; right: 10px;
+}
+.ipad-card.on .ipad-state-dot { background: #a78bfa; box-shadow: 0 0 5px rgba(167,139,250,0.6); }
+
+/* ── DUAS/TRÊS ESTRELAS NA LISTA ── */
+.item-stars {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.star-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.star-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.3;
+    line-height: 1;
+}
+
+.stars-divider {
+    width: 1px;
+    height: 28px;
+    background: rgba(255,255,255,0.08);
+}
+
+.star-btn.star-p7.star-on   { color: #64b4ff; }
+.star-btn.star-home.star-on { color: #ffb400; }
+.star-btn.star-ipad.star-on { color: #a78bfa; }

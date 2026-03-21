@@ -10,17 +10,14 @@ import { createConnection, createLongLivedTokenAuth, subscribeEntities, callServ
 
 // Estado dos filtros de área por página
 const areaFilters = {
-    home: new Set(),
-    lights: new Set(),
-    switches: new Set(),
-    settings: new Set()
+    home: new Set(), p7: new Set(), ipad: new Set(),
+    lights: new Set(), switches: new Set()
 };
 
 // Estado dos filtros de status por página
 const stateFilters = {
-    home: 'all',
-    lights: 'all',
-    switches: 'all'
+    home: 'all', p7: 'all', ipad: 'all',
+    lights: 'all', switches: 'all'
 };
 
 // NAVEGAÇÃO
@@ -77,13 +74,13 @@ function getAreaInfo(entityId, areas, entities_reg, devices_reg) {
 
 // FILTROS DE ÁREA
 function loadAreaFilters() {
-    ['home', 'lights', 'switches', 'settings'].forEach(key => {
+    ['home', 'p7', 'ipad', 'lights', 'switches'].forEach(key => {
         try {
             const saved = JSON.parse(localStorage.getItem('area_filter_' + key) || '[]');
             saved.forEach(r => areaFilters[key].add(r));
         } catch(e) {}
     });
-    ['home', 'lights', 'switches'].forEach(key => {
+    ['home', 'p7', 'ipad', 'lights', 'switches'].forEach(key => {
         const saved = localStorage.getItem('state_filter_' + key);
         if (saved) stateFilters[key] = saved;
     });
@@ -183,6 +180,16 @@ function getFavorites(entities) {
     return (fav && fav.attributes && fav.attributes.entities) ? fav.attributes.entities : [];
 }
 
+function getP7Favorites(entities) {
+    const fav = entities['sensor.hadashglass_p7_favorites'];
+    return (fav && fav.attributes && fav.attributes.entities) ? fav.attributes.entities : [];
+}
+
+function getIPadFavorites(entities) {
+    const fav = entities['sensor.hadashglass_ipad_favorites'];
+    return (fav && fav.attributes && fav.attributes.entities) ? fav.attributes.entities : [];
+}
+
 // RENDER HOME
 function renderHome(entities, conn, areas, entities_reg, devices_reg) {
     const grid = document.getElementById('dashboard-grid');
@@ -253,8 +260,142 @@ function renderHome(entities, conn, areas, entities_reg, devices_reg) {
     });
 }
 
-// FAVORITO — adiciona/remove do Home, salva no HA
-function toggleFavorite(entityId, starEl, currentFavorites) {
+// RENDER P7 — favoritos exclusivos do tablet P7
+function renderP7(entities, conn, areas, entities_reg, devices_reg) {
+    const grid = document.getElementById('p7-grid');
+    if (!grid) return;
+    const visibleIds = getP7Favorites(entities);
+
+    const grouped = {};
+    visibleIds.forEach(id => {
+        if (!entities[id]) return;
+        const reg = entities_reg.find(e => e.entity_id === id);
+        if (reg && (reg.hidden_by || reg.disabled_by)) return;
+        const room = getAreaInfo(id, areas, entities_reg, devices_reg);
+        if (!grouped[room]) grouped[room] = [];
+        grouped[room].push({ id, state: entities[id] });
+    });
+
+    const allRooms = Object.keys(grouped).sort();
+    renderAreaFilter('filter-p7', allRooms, 'p7', () => renderP7(entities, conn, areas, entities_reg, devices_reg));
+    renderStateFilter('state-filter-p7', 'p7',
+        { all: 'Todos', on: 'On', off: 'Off' },
+        () => renderP7(entities, conn, areas, entities_reg, devices_reg));
+
+    grid.innerHTML = '';
+
+    if (allRooms.length === 0) {
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;opacity:0.5;padding:60px 20px">' +
+            '<div style="font-size:40px;margin-bottom:10px">📱</div>' +
+            '<p>Nenhum favorito do P7.</p>' +
+            '<p style="font-size:12px;margin-top:8px">Vá em Ajustes e clique em ⭐ P7 nos dispositivos desejados.</p>' +
+            '</div>';
+        return;
+    }
+
+    allRooms.forEach(room => {
+        if (!isRoomVisible(room, 'p7')) return;
+        const roomEntities = grouped[room].filter(item => isStateVisible(item.state.state, 'p7'));
+        if (roomEntities.length === 0) return;
+
+        const rDiv = document.createElement('div');
+        rDiv.className = 'room-section';
+        rDiv.innerText = room;
+        grid.appendChild(rDiv);
+
+        roomEntities.forEach(item => {
+            const ent = item.state;
+            const isOn = ent.state === 'on';
+            const domain = item.id.split('.')[0];
+            const displayName = simplifyName(ent.attributes.friendly_name, room, item.id);
+            const card = document.createElement('div');
+            card.className = `p7-card ${isOn ? 'on' : ''}`;
+            const iconHtml = domain === 'light'
+                ? getLightIcon(isOn).replace('width="38" height="38"', 'width="42" height="42"').replace(isOn ? '#ffb400' : 'rgba(255,255,255,0.25)', isOn ? '#64b4ff' : 'rgba(255,255,255,0.25)')
+                : `<span style="font-size:34px">${isOn ? '🟡' : '⚫'}</span>`;
+            card.innerHTML = `
+                <div class="p7-state-dot"></div>
+                <div class="p7-card-icon">${iconHtml}</div>
+                <div class="p7-card-name">${displayName}</div>
+                <div class="p7-card-area">${room}</div>
+            `;
+            if (['light', 'switch', 'fan'].includes(domain)) {
+                card.onclick = () => callService(conn, domain, "toggle", { entity_id: item.id });
+            }
+            grid.appendChild(card);
+        });
+    });
+}
+
+// RENDER IPAD — favoritos exclusivos do iPad
+function renderIPad(entities, conn, areas, entities_reg, devices_reg) {
+    const grid = document.getElementById('ipad-grid');
+    if (!grid) return;
+    const visibleIds = getIPadFavorites(entities);
+
+    const grouped = {};
+    visibleIds.forEach(id => {
+        if (!entities[id]) return;
+        const reg = entities_reg.find(e => e.entity_id === id);
+        if (reg && (reg.hidden_by || reg.disabled_by)) return;
+        const room = getAreaInfo(id, areas, entities_reg, devices_reg);
+        if (!grouped[room]) grouped[room] = [];
+        grouped[room].push({ id, state: entities[id] });
+    });
+
+    const allRooms = Object.keys(grouped).sort();
+    renderAreaFilter('filter-ipad', allRooms, 'ipad', () => renderIPad(entities, conn, areas, entities_reg, devices_reg));
+    renderStateFilter('state-filter-ipad', 'ipad',
+        { all: 'Todos', on: 'On', off: 'Off' },
+        () => renderIPad(entities, conn, areas, entities_reg, devices_reg));
+
+    grid.innerHTML = '';
+
+    if (allRooms.length === 0) {
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;opacity:0.5;padding:60px 20px">' +
+            '<div style="font-size:40px;margin-bottom:10px">📟</div>' +
+            '<p>Nenhum favorito do iPad.</p>' +
+            '<p style="font-size:12px;margin-top:8px">Vá em Ajustes e clique em ⭐ iPad nos dispositivos desejados.</p>' +
+            '</div>';
+        return;
+    }
+
+    allRooms.forEach(room => {
+        if (!isRoomVisible(room, 'ipad')) return;
+        const roomEntities = grouped[room].filter(item => isStateVisible(item.state.state, 'ipad'));
+        if (roomEntities.length === 0) return;
+
+        const rDiv = document.createElement('div');
+        rDiv.className = 'room-section';
+        rDiv.innerText = room;
+        grid.appendChild(rDiv);
+
+        roomEntities.forEach(item => {
+            const ent = item.state;
+            const isOn = ent.state === 'on';
+            const domain = item.id.split('.')[0];
+            const displayName = simplifyName(ent.attributes.friendly_name, room, item.id);
+            const card = document.createElement('div');
+            card.className = `ipad-card ${isOn ? 'on' : ''}`;
+            const iconHtml = domain === 'light'
+                ? getLightIcon(isOn).replace(isOn ? '#ffb400' : 'rgba(255,255,255,0.25)', isOn ? '#a78bfa' : 'rgba(255,255,255,0.25)')
+                : `<span style="font-size:30px">${isOn ? '🟡' : '⚫'}</span>`;
+            card.innerHTML = `
+                <div class="ipad-state-dot"></div>
+                <div class="ipad-card-icon">${iconHtml}</div>
+                <div class="ipad-card-name">${displayName}</div>
+                <div class="ipad-card-area">${room}</div>
+            `;
+            if (['light', 'switch', 'fan'].includes(domain)) {
+                card.onclick = () => callService(conn, domain, "toggle", { entity_id: item.id });
+            }
+            grid.appendChild(card);
+        });
+    });
+}
+
+// FAVORITO — adiciona/remove, salva na entidade HA indicada
+function saveFavorite(entityId, starEl, currentFavorites, haEntityId) {
     const isFav = currentFavorites.includes(entityId);
     const newList = isFav
         ? currentFavorites.filter(v => v !== entityId)
@@ -262,7 +403,7 @@ function toggleFavorite(entityId, starEl, currentFavorites) {
 
     isFav ? starEl.classList.remove('star-on') : starEl.classList.add('star-on');
 
-    fetch(`${HA_CONFIG.URL}/api/states/sensor.hadashglass_favorites`, {
+    fetch(`${HA_CONFIG.URL}/api/states/${haEntityId}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${HA_CONFIG.TOKEN}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ state: 'active', attributes: { entities: newList } })
@@ -342,23 +483,48 @@ function renderList(domain, containerId, entities, conn, areas, entities_reg, de
         }
         listContent.appendChild(rHeader);
 
-        const favList = getFavorites(entities);
+        const homeFavList = getFavorites(entities);
+        const p7FavList   = getP7Favorites(entities);
+        const ipadFavList = getIPadFavorites(entities);
         roomEntities.forEach(item => {
             const displayName = simplifyName(item.state.attributes.friendly_name, room, item.id);
-            const isFav = favList.includes(item.id);
+            const isHomeFav = homeFavList.includes(item.id);
+            const isP7Fav   = p7FavList.includes(item.id);
+            const isIPadFav = ipadFavList.includes(item.id);
             const itemDiv = document.createElement('div');
             itemDiv.className = 'list-item';
             itemDiv.innerHTML = `
                 <span>${displayName}</span>
                 <div style="display:flex;align-items:center;gap:12px">
-                    <span class="star-btn ${isFav ? 'star-on' : ''}" title="Adicionar ao Home">★</span>
+                    <div class="item-stars">
+                        <div class="star-group">
+                            <span class="star-btn star-home ${isHomeFav ? 'star-on' : ''}">★</span>
+                            <span class="star-label">Home</span>
+                        </div>
+                        <div class="stars-divider"></div>
+                        <div class="star-group">
+                            <span class="star-btn star-p7 ${isP7Fav ? 'star-on' : ''}">★</span>
+                            <span class="star-label">P7</span>
+                        </div>
+                        <div class="stars-divider"></div>
+                        <div class="star-group">
+                            <span class="star-btn star-ipad ${isIPadFav ? 'star-on' : ''}">★</span>
+                            <span class="star-label">iPad</span>
+                        </div>
+                    </div>
                     <label class="switch"><input type="checkbox" ${item.state.state === 'on' ? 'checked' : ''}><span class="slider"></span></label>
                 </div>
             `;
             itemDiv.querySelector('input').onchange = () =>
                 callService(conn, domain, item.state.state === 'on' ? 'turn_off' : 'turn_on', { entity_id: item.id });
-            itemDiv.querySelector('.star-btn').onclick = function() {
-                toggleFavorite(item.id, this, favList);
+            itemDiv.querySelector('.star-home').onclick = function() {
+                saveFavorite(item.id, this, homeFavList, 'sensor.hadashglass_favorites');
+            };
+            itemDiv.querySelector('.star-p7').onclick = function() {
+                saveFavorite(item.id, this, p7FavList, 'sensor.hadashglass_p7_favorites');
+            };
+            itemDiv.querySelector('.star-ipad').onclick = function() {
+                saveFavorite(item.id, this, ipadFavList, 'sensor.hadashglass_ipad_favorites');
             };
             listContent.appendChild(itemDiv);
         });
@@ -367,11 +533,12 @@ function renderList(domain, containerId, entities, conn, areas, entities_reg, de
 
 // SISTEMA
 function updateSystemTab(entities, areas) {
-    const visibleIds = getFavorites(entities);
     const el = id => document.getElementById(id);
-    if (el('sys-total-count'))   el('sys-total-count').innerText   = Object.keys(entities).length;
-    if (el('sys-visible-count')) el('sys-visible-count').innerText = visibleIds.filter(id => entities[id]).length;
-    if (el('sys-areas-count'))   el('sys-areas-count').innerText   = areas.length;
+    if (el('sys-total-count'))  el('sys-total-count').innerText  = Object.keys(entities).length;
+    if (el('sys-home-count'))   el('sys-home-count').innerText   = getFavorites(entities).filter(id => entities[id]).length;
+    if (el('sys-p7-count'))     el('sys-p7-count').innerText     = getP7Favorites(entities).filter(id => entities[id]).length;
+    if (el('sys-ipad-count'))   el('sys-ipad-count').innerText   = getIPadFavorites(entities).filter(id => entities[id]).length;
+    if (el('sys-areas-count'))  el('sys-areas-count').innerText  = areas.length;
 }
 
 // CLIMA
@@ -399,6 +566,8 @@ async function init() {
 
         subscribeEntities(conn, entities => {
             renderHome(entities, conn, areas, entities_reg, devices);
+            renderP7(entities, conn, areas, entities_reg, devices);
+            renderIPad(entities, conn, areas, entities_reg, devices);
             renderList('light',  'lights-list',   entities, conn, areas, entities_reg, devices);
             renderList('switch', 'switches-list', entities, conn, areas, entities_reg, devices);
             updateWeather(entities);

@@ -385,9 +385,9 @@ function renderAreaFilter(filterId, allRooms, filterKey, renderCallback) {
     bar.scrollLeft = scrollLeft;
 }
 
-// ── FAVORITOS — lê da entidade HA ─────────────────────────────
+// ── FAVORITOS — lê da entidade HA (iPad exclusivo) ────────────
 function getFavorites() {
-    var fav = allEntities['sensor.hadashglass_favorites'];
+    var fav = allEntities['sensor.hadashglass_ipad_favorites'];
     return (fav && fav.attributes && fav.attributes.entities) ? fav.attributes.entities : [];
 }
 
@@ -661,14 +661,14 @@ function toggleFavorite(entityId, starEl) {
     }
 
     // Atualiza local imediatamente (otimista)
-    if (!allEntities['sensor.hadashglass_favorites']) {
-        allEntities['sensor.hadashglass_favorites'] = { attributes: {} };
+    if (!allEntities['sensor.hadashglass_ipad_favorites']) {
+        allEntities['sensor.hadashglass_ipad_favorites'] = { attributes: {} };
     }
-    allEntities['sensor.hadashglass_favorites'].attributes.entities = newList;
+    allEntities['sensor.hadashglass_ipad_favorites'].attributes.entities = newList;
 
-    // Salva no HA via REST
+    // Salva no HA via REST (iPad exclusivo)
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', HA_URL + '/api/states/sensor.hadashglass_favorites', true);
+    xhr.open('POST', HA_URL + '/api/states/sensor.hadashglass_ipad_favorites', true);
     xhr.setRequestHeader('Authorization', 'Bearer ' + HA_TOKEN);
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.send(JSON.stringify({ state: 'active', attributes: { entities: newList } }));
