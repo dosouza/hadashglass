@@ -214,11 +214,12 @@ function getEntityIcon(domain, state) {
 // FAVORITOS — cache local como fonte de verdade
 // Evita race condition: subscribeEntities pode não entregar
 // atualizações das entidades sensor.hadashglass_* imediatamente.
-const favsCache = { home: [], p7: [], ipad: [] };
+const favsCache = { home: [], p7: [], ipad: [], pinned: [] };
 
 function syncFavsFromEntities(entities) {
     const map = {
-        home: 'sensor.hadashglass_favorites',
+        home:   'sensor.hadashglass_favorites',
+        pinned: 'sensor.hadashglass_pinned',
         p7:   'sensor.hadashglass_p7_favorites',
         ipad: 'sensor.hadashglass_ipad_favorites'
     };
@@ -531,9 +532,10 @@ function renderList(domain, containerId, entities, conn, areas, entities_reg, de
 
         roomEntities.forEach(item => {
             const displayName = simplifyName(item.state.attributes.friendly_name, room, item.id);
-            const isHomeFav = favsCache.home.includes(item.id);
-            const isP7Fav   = favsCache.p7.includes(item.id);
-            const isIPadFav = favsCache.ipad.includes(item.id);
+            const isHomeFav   = favsCache.home.includes(item.id);
+            const isP7Fav     = favsCache.p7.includes(item.id);
+            const isIPadFav   = favsCache.ipad.includes(item.id);
+            const isPinned    = favsCache.pinned.includes(item.id);
             const itemDiv = document.createElement('div');
             itemDiv.className = 'list-item';
             itemDiv.innerHTML = `
@@ -554,6 +556,11 @@ function renderList(domain, containerId, entities, conn, areas, entities_reg, de
                             <span class="star-btn star-ipad ${isIPadFav ? 'star-on' : ''}">★</span>
                             <span class="star-label">iPad</span>
                         </div>
+                        <div class="stars-divider"></div>
+                        <div class="star-group">
+                            <span class="star-btn star-pin ${isPinned ? 'star-on' : ''}">📌</span>
+                            <span class="star-label">Top</span>
+                        </div>
                     </div>
                     <label class="switch"><input type="checkbox" ${item.state.state === 'on' ? 'checked' : ''}><span class="slider"></span></label>
                 </div>
@@ -568,6 +575,9 @@ function renderList(domain, containerId, entities, conn, areas, entities_reg, de
             };
             itemDiv.querySelector('.star-ipad').onclick = function() {
                 saveFavorite(item.id, this, 'ipad', 'sensor.hadashglass_ipad_favorites');
+            };
+            itemDiv.querySelector('.star-pin').onclick = function() {
+                saveFavorite(item.id, this, 'pinned', 'sensor.hadashglass_pinned');
             };
             listContent.appendChild(itemDiv);
         });
@@ -596,6 +606,53 @@ function updateWeather(entities) {
     document.getElementById('w-icon').innerText = icons[w.state] || '☀️';
 }
 
+// RENDER PINNED — cards especiais no topbar
+function renderPinned(entities, conn) {
+    const container = document.getElementById('pinned-cards');
+    if (!container) return;
+
+    const pinned = favsCache.pinned.filter(id => entities[id]);
+    if (pinned.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+
+    container.innerHTML = '';
+    pinned.forEach(entityId => {
+        const ent = entities[entityId];
+        if (!ent) return;
+        const state   = ent.state;
+        const isOn    = state === 'on';
+        const domain  = entityId.split('.')[0];
+        const isToggle = domain === 'light' || domain === 'switch';
+        const name    = (ent.attributes.friendly_name || entityId).replace(/luz\s*/gi, '').trim() || entityId.split('.')[1];
+        const icon    = domain === 'light' ? getLightIcon(isOn) : getEntityIcon(entityId, ent);
+
+        // Para sensores: mostra valor. Para toggles: mostra on/off
+        let stateLabel;
+        if (isToggle) {
+            stateLabel = isOn ? 'Ligado' : 'Desligado';
+        } else {
+            const unit = ent.attributes.unit_of_measurement || '';
+            stateLabel = `${state}${unit ? ' ' + unit : ''}`;
+        }
+
+        const card = document.createElement('div');
+        card.className = `pinned-card${isToggle && isOn ? ' on' : ''}`;
+        card.innerHTML = `
+            <div class="pinned-icon">${icon}</div>
+            <div class="pinned-info">
+                <div class="pinned-name">${name}</div>
+                <div class="pinned-state">${stateLabel}</div>
+            </div>
+        `;
+        if (isToggle) {
+            card.onclick = () => callService(conn, domain, isOn ? 'turn_off' : 'turn_on', { entity_id: entityId });
+        }
+        container.appendChild(card);
+    });
+}
+
 // INIT
 async function init() {
     loadAreaFilters();
@@ -609,6 +666,7 @@ async function init() {
 
         subscribeEntities(conn, entities => {
             syncFavsFromEntities(entities);
+            renderPinned(entities, conn);
             renderHome(entities, conn, areas, entities_reg, devices);
             renderP7(entities, conn, areas, entities_reg, devices);
             renderIPad(entities, conn, areas, entities_reg, devices);
