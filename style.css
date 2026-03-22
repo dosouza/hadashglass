@@ -268,10 +268,11 @@ input:checked + .slider:before { transform: translateX(22px); }
     display: flex;
     gap: 10px;
     align-items: center;
+    justify-content: center;
     flex-wrap: nowrap;
     overflow-x: auto;
     flex: 1;
-    padding: 0 20px;
+    padding: 0 16px;
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
@@ -279,36 +280,70 @@ input:checked + .slider:before { transform: translateX(22px); }
 
 .pinned-card {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 8px;
-    padding: 8px 14px;
-    background: rgba(255,255,255,0.07);
+    justify-content: center;
+    gap: 5px;
+    padding: 12px 14px;
+    background: var(--glass);
     border: 1px solid var(--glass-border);
-    border-radius: 16px;
-    cursor: default;
+    border-radius: 20px;
     transition: all 0.2s;
     flex-shrink: 0;
+    min-width: 80px;
+    text-align: center;
     backdrop-filter: blur(10px);
-    min-width: 100px;
+    -webkit-tap-highlight-color: transparent;
 }
+.pinned-card:active { transform: scale(0.94); }
 .pinned-card.on {
+    border-color: var(--active-color);
     background: rgba(255,180,0,0.12);
-    border-color: rgba(255,180,0,0.4);
-    cursor: pointer;
+    box-shadow: 0 0 12px rgba(255,180,0,0.15);
 }
-.pinned-card.on:active { transform: scale(0.96); }
-.pinned-card:not(.on)[style*="cursor: pointer"]:active { transform: scale(0.96); }
 
-.pinned-icon { font-size: 22px; line-height: 1; flex-shrink: 0; }
-.pinned-info { display: flex; flex-direction: column; gap: 2px; }
-.pinned-name  { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.5); white-space: nowrap; }
+.pinned-icon { font-size: 26px; line-height: 1; }
+.pinned-name  { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.45); white-space: nowrap; }
 .pinned-card.on .pinned-name { color: var(--active-color); }
-.pinned-state { font-size: 11px; opacity: 0.4; white-space: nowrap; }
-.pinned-card.on .pinned-state { opacity: 0.7; }
+.pinned-state { font-size: 10px; opacity: 0.35; white-space: nowrap; }
+.pinned-card.on .pinned-state { opacity: 0.65; }
 
 /* pin button na lista */
 .star-btn.star-pin { font-size: 14px; }
 .star-btn.star-pin.star-on { filter: none; opacity: 1; }
+
+/* ── SETTINGS TABS scrollável ── */
+.settings-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.settings-tabs::-webkit-scrollbar { display: none; }
+.settings-tabs .tab-btn { white-space: nowrap; flex-shrink: 0; }
+
+/* ── BOTÕES DE CONTROLE (cover / button) ── */
+.btn-press, .btn-cover {
+    padding: 6px 14px;
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.08);
+    color: white;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+.btn-press:hover, .btn-cover:hover { background: rgba(255,255,255,0.15); }
+.btn-press:active, .btn-cover:active { transform: scale(0.96); }
+
+/* ── ESTADO DE ENTIDADE (sensor/câmera) ── */
+.entity-state-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.55);
+    white-space: nowrap;
+}
 
 /* ── SIDEBAR COLLAPSE ── */
 .sidebar-toggle {

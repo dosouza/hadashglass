@@ -71,6 +71,10 @@
             <div class="settings-tabs">
                 <div class="tab-btn active" data-tab="tab-lights">💡 Luzes</div>
                 <div class="tab-btn" data-tab="tab-switches">🔌 Tomadas</div>
+                <div class="tab-btn" data-tab="tab-sensors">🌡️ Sensores</div>
+                <div class="tab-btn" data-tab="tab-covers">🪟 Persianas</div>
+                <div class="tab-btn" data-tab="tab-buttons">🔘 Botões</div>
+                <div class="tab-btn" data-tab="tab-cameras">📷 Câmeras</div>
                 <div class="tab-btn" data-tab="tab-system">⚙️ Sistema</div>
             </div>
 
@@ -90,6 +94,38 @@
                     <div class="area-filter-bar" id="state-filter-switches"></div>
                 </div>
                 <div id="switches-list"></div>
+            </div>
+
+            <div id="tab-sensors" class="tab-content">
+                <div class="filter-group" id="fg-sensors">
+                    <button class="filter-toggle-btn" data-fg="fg-sensors">⌃</button>
+                    <div class="area-filter-bar" id="filter-sensors"></div>
+                </div>
+                <div id="sensors-list"></div>
+            </div>
+
+            <div id="tab-covers" class="tab-content">
+                <div class="filter-group" id="fg-covers">
+                    <button class="filter-toggle-btn" data-fg="fg-covers">⌃</button>
+                    <div class="area-filter-bar" id="filter-covers"></div>
+                </div>
+                <div id="covers-list"></div>
+            </div>
+
+            <div id="tab-buttons" class="tab-content">
+                <div class="filter-group" id="fg-buttons">
+                    <button class="filter-toggle-btn" data-fg="fg-buttons">⌃</button>
+                    <div class="area-filter-bar" id="filter-buttons"></div>
+                </div>
+                <div id="buttons-list"></div>
+            </div>
+
+            <div id="tab-cameras" class="tab-content">
+                <div class="filter-group" id="fg-cameras">
+                    <button class="filter-toggle-btn" data-fg="fg-cameras">⌃</button>
+                    <div class="area-filter-bar" id="filter-cameras"></div>
+                </div>
+                <div id="cameras-list"></div>
             </div>
 
             <div id="tab-system" class="tab-content">

@@ -11,7 +11,8 @@ import { createConnection, createLongLivedTokenAuth, subscribeEntities, callServ
 // Estado dos filtros de área por página
 const areaFilters = {
     home: new Set(), p7: new Set(), ipad: new Set(),
-    lights: new Set(), switches: new Set()
+    lights: new Set(), switches: new Set(),
+    sensors: new Set(), covers: new Set(), buttons: new Set(), cameras: new Set()
 };
 
 // Estado dos filtros de status por página
@@ -111,7 +112,7 @@ function getAreaInfo(entityId, areas, entities_reg, devices_reg) {
 
 // FILTROS DE ÁREA
 function loadAreaFilters() {
-    ['home', 'p7', 'ipad', 'lights', 'switches'].forEach(key => {
+    ['home', 'p7', 'ipad', 'lights', 'switches', 'sensors', 'covers', 'buttons', 'cameras'].forEach(key => {
         try {
             const saved = JSON.parse(localStorage.getItem('area_filter_' + key) || '[]');
             saved.forEach(r => areaFilters[key].add(r));
@@ -606,6 +607,90 @@ function updateWeather(entities) {
     document.getElementById('w-icon').innerText = icons[w.state] || '☀️';
 }
 
+// RENDER GENÉRICO (Sensores, Persianas, Botões, Câmeras, etc.)
+function renderDomainList(opts, entities, conn, areas, entities_reg, devices_reg) {
+    const { domains, containerId, filterId, filterKey } = opts;
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const allIds = Object.keys(entities).filter(id => {
+        if (!domains.includes(id.split('.')[0])) return false;
+        const reg = entities_reg.find(e => e.entity_id === id);
+        return !reg || (!reg.hidden_by && !reg.disabled_by);
+    });
+
+    const grouped = {};
+    allIds.forEach(id => {
+        const room = getAreaInfo(id, areas, entities_reg, devices_reg);
+        if (!grouped[room]) grouped[room] = [];
+        grouped[room].push({ id, state: entities[id] });
+    });
+
+    const allRooms = Object.keys(grouped).sort();
+    renderAreaFilter(filterId, allRooms, filterKey,
+        () => renderDomainList(opts, entities, conn, areas, entities_reg, devices_reg));
+
+    container.innerHTML = `<div id="${containerId}-content" class="list-container"></div>`;
+    const listContent = document.getElementById(`${containerId}-content`);
+
+    allRooms.forEach(room => {
+        if (!isRoomVisible(room, filterKey)) return;
+        const roomEntities = grouped[room];
+        if (roomEntities.length === 0) return;
+
+        const rHeader = document.createElement('div');
+        rHeader.className = 'room-section';
+        rHeader.innerHTML = `<span>${room}</span>`;
+        listContent.appendChild(rHeader);
+
+        roomEntities.forEach(item => {
+            const domain      = item.id.split('.')[0];
+            const st          = item.state.state;
+            const displayName = simplifyName(item.state.attributes.friendly_name, room, item.id);
+            const unit        = item.state.attributes.unit_of_measurement || '';
+            const isPinned    = favsCache.pinned.includes(item.id);
+
+            let controlHtml;
+            if (domain === 'button') {
+                controlHtml = `<button class="btn-press">▶ Pressionar</button>`;
+            } else if (domain === 'cover') {
+                const isOpen = st === 'open' || st === 'opening';
+                controlHtml = `<button class="btn-cover">${isOpen ? '⬇ Fechar' : '⬆ Abrir'}</button>`;
+            } else {
+                const displayState = unit ? `${st} ${unit}` : st;
+                controlHtml = `<span class="entity-state-value">${displayState}</span>`;
+            }
+
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'list-item';
+            itemDiv.innerHTML = `
+                <span>${displayName}</span>
+                <div style="display:flex;align-items:center;gap:12px">
+                    <div class="item-stars">
+                        <div class="star-group">
+                            <span class="star-btn star-pin ${isPinned ? 'star-on' : ''}">📌</span>
+                            <span class="star-label">Top</span>
+                        </div>
+                    </div>
+                    ${controlHtml}
+                </div>
+            `;
+            itemDiv.querySelector('.star-pin').onclick = function() {
+                saveFavorite(item.id, this, 'pinned', 'sensor.hadashglass_pinned');
+            };
+            if (domain === 'button') {
+                itemDiv.querySelector('.btn-press').onclick = () =>
+                    callService(conn, 'button', 'press', { entity_id: item.id });
+            } else if (domain === 'cover') {
+                const isOpen = st === 'open' || st === 'opening';
+                itemDiv.querySelector('.btn-cover').onclick = () =>
+                    callService(conn, 'cover', isOpen ? 'close_cover' : 'open_cover', { entity_id: item.id });
+            }
+            listContent.appendChild(itemDiv);
+        });
+    });
+}
+
 // RENDER PINNED — cards especiais no topbar
 function renderPinned(entities, conn) {
     const container = document.getElementById('pinned-cards');
@@ -624,11 +709,10 @@ function renderPinned(entities, conn) {
         const state   = ent.state;
         const isOn    = state === 'on';
         const domain  = entityId.split('.')[0];
-        const isToggle = domain === 'light' || domain === 'switch';
-        const name    = (ent.attributes.friendly_name || entityId).replace(/luz\s*/gi, '').trim() || entityId.split('.')[1];
-        const icon    = domain === 'light' ? getLightIcon(isOn) : getEntityIcon(entityId, ent);
+        const isToggle = ['light', 'switch', 'input_boolean', 'fan'].includes(domain);
+        const name     = simplifyName(ent.attributes.friendly_name, null, entityId);
+        const icon     = getEntityIcon(domain, state);
 
-        // Para sensores: mostra valor. Para toggles: mostra on/off
         let stateLabel;
         if (isToggle) {
             stateLabel = isOn ? 'Ligado' : 'Desligado';
@@ -638,13 +722,12 @@ function renderPinned(entities, conn) {
         }
 
         const card = document.createElement('div');
-        card.className = `pinned-card${isToggle && isOn ? ' on' : ''}`;
+        card.className = `pinned-card${isOn ? ' on' : ''}`;
+        card.style.cursor = isToggle ? 'pointer' : 'default';
         card.innerHTML = `
             <div class="pinned-icon">${icon}</div>
-            <div class="pinned-info">
-                <div class="pinned-name">${name}</div>
-                <div class="pinned-state">${stateLabel}</div>
-            </div>
+            <div class="pinned-name">${name}</div>
+            <div class="pinned-state">${stateLabel}</div>
         `;
         if (isToggle) {
             card.onclick = () => callService(conn, domain, isOn ? 'turn_off' : 'turn_on', { entity_id: entityId });
@@ -672,6 +755,10 @@ async function init() {
             renderIPad(entities, conn, areas, entities_reg, devices);
             renderList('light',  'lights-list',   entities, conn, areas, entities_reg, devices);
             renderList('switch', 'switches-list', entities, conn, areas, entities_reg, devices);
+            renderDomainList({ domains: ['sensor', 'binary_sensor'], containerId: 'sensors-list', filterId: 'filter-sensors', filterKey: 'sensors' }, entities, conn, areas, entities_reg, devices);
+            renderDomainList({ domains: ['cover'],  containerId: 'covers-list',  filterId: 'filter-covers',  filterKey: 'covers'  }, entities, conn, areas, entities_reg, devices);
+            renderDomainList({ domains: ['button'], containerId: 'buttons-list', filterId: 'filter-buttons', filterKey: 'buttons' }, entities, conn, areas, entities_reg, devices);
+            renderDomainList({ domains: ['camera'], containerId: 'cameras-list', filterId: 'filter-cameras', filterKey: 'cameras' }, entities, conn, areas, entities_reg, devices);
             updateWeather(entities);
             updateSystemTab(entities, areas);
         });
