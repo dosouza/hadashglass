@@ -4,13 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>HAdashglass Pro v3.1</title>
-    <link rel="stylesheet" href="style.css?v=3.0.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&family=Quicksand:wght@400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=3.2.2">
 </head>
 <body>
     <div class="sidebar" id="sidebar">
         <div class="nav-icon active" data-target="page-home">🏠</div>
         <div class="nav-icon nav-p7" data-target="page-p7">📱</div>
         <div class="nav-icon nav-ipad" data-target="page-ipad">📟</div>
+        <div class="nav-icon nav-lovable" data-target="page-lovable">✨</div>
+        <div class="nav-icon nav-premium" data-target="page-premium">💎</div>
         <div class="nav-spacer" style="flex: 1;"></div>
         <div class="nav-icon" data-target="page-settings">⚙️</div>
         <div class="sidebar-toggle" id="sidebar-toggle">❮</div>
@@ -65,6 +70,94 @@
                 <div class="area-filter-bar" id="state-filter-ipad"></div>
             </div>
             <div class="grid ipad-grid" id="ipad-grid"></div>
+        </div>
+
+        <div id="page-lovable" class="page lovable-page">
+            <div class="lovable-filter-group filter-group" id="fg-lovable">
+                <button class="filter-toggle-btn" data-fg="fg-lovable">⌃</button>
+                <div class="area-filter-bar lovable-filter-bar" id="filter-lovable"></div>
+                <div class="area-filter-bar lovable-state-bar" id="state-filter-lovable"></div>
+            </div>
+
+            <section class="lovable-scenes-section">
+                <div class="lovable-room-title">
+                    <span>Cenas</span>
+                    <span class="lovable-room-line"></span>
+                </div>
+                <div class="lovable-scenes">
+                    <div class="lovable-scene">
+                        <span class="lovable-scene-icon">🎬</span>
+                        <span class="lovable-scene-label">Cinema</span>
+                    </div>
+                    <div class="lovable-scene">
+                        <span class="lovable-scene-icon">🍽️</span>
+                        <span class="lovable-scene-label">Jantar</span>
+                    </div>
+                    <div class="lovable-scene">
+                        <span class="lovable-scene-icon">🌙</span>
+                        <span class="lovable-scene-label">Dormir</span>
+                    </div>
+                    <div class="lovable-scene">
+                        <span class="lovable-scene-icon">🌅</span>
+                        <span class="lovable-scene-label">Bom dia</span>
+                    </div>
+                    <div class="lovable-scene">
+                        <span class="lovable-scene-icon">✨</span>
+                        <span class="lovable-scene-label">Festa</span>
+                    </div>
+                </div>
+            </section>
+
+            <div id="lovable-grid"></div>
+        </div>
+
+        <div id="page-premium" class="page premium-page">
+            <header class="premium-header">
+                <div class="premium-clock">
+                    <div class="premium-time" id="premium-time">00:00</div>
+                    <p class="premium-date" id="premium-date">Carregando...</p>
+                </div>
+                <div class="premium-lights-count">
+                    <p><span id="premium-active-count">0</span> luzes ligadas</p>
+                </div>
+            </header>
+
+            <div class="premium-status-bar">
+                <div class="premium-status"><span>▢</span>Fechado</div>
+                <div class="premium-status"><span>⌂</span>Portão fechado</div>
+                <div class="premium-status"><span>♙</span>2 em casa</div>
+                <div class="premium-status"><span>♢</span>Alarme ativo</div>
+                <div class="premium-status"><span>⌁</span>Online</div>
+            </div>
+
+            <section class="premium-row">
+                <div class="premium-weather premium-glass">
+                    <div class="premium-weather-left">
+                        <span class="premium-weather-icon" id="premium-weather-icon">☁</span>
+                        <div>
+                            <span class="premium-weather-temp"><span id="premium-weather-temp">--</span>°</span>
+                            <p class="premium-weather-desc" id="premium-weather-desc">--</p>
+                        </div>
+                    </div>
+                    <div class="premium-weather-meta">
+                        <div class="premium-meta-item">♒ <span id="premium-weather-humidity">--</span></div>
+                        <div class="premium-meta-item">↝ <span id="premium-weather-rain">--</span></div>
+                    </div>
+                </div>
+
+                <div class="premium-scenes">
+                    <button class="premium-scene-btn">▦ Cinema</button>
+                    <button class="premium-scene-btn">☾ Boa Noite</button>
+                    <button class="premium-scene-btn">☼ Bom Dia</button>
+                    <button class="premium-scene-btn">⇥ Sair de Casa</button>
+                    <button class="premium-scene-btn">✧ Festa</button>
+                </div>
+            </section>
+
+            <section class="premium-rooms-section">
+                <h2 class="premium-section-title">Cômodos</h2>
+                <div class="premium-rooms-grid" id="premium-rooms-grid"></div>
+            </section>
         </div>
 
         <div id="page-settings" class="page">
@@ -139,6 +232,7 @@
                     <div class="list-item"><span>Favoritos Home</span><span id="sys-home-count">--</span></div>
                     <div class="list-item"><span>Favoritos P7</span><span id="sys-p7-count" style="color:#64b4ff">--</span></div>
                     <div class="list-item"><span>Favoritos iPad</span><span id="sys-ipad-count" style="color:#a78bfa">--</span></div>
+                    <div class="list-item"><span>Favoritos Lovable</span><span id="sys-lovable-count" style="color:#ff7ad9">--</span></div>
                     <div class="list-item"><span>Total de Entidades</span><span id="sys-total-count">--</span></div>
                     <div class="list-item"><span>Áreas Mapeadas</span><span id="sys-areas-count">--</span></div>
                 </div>
@@ -146,6 +240,6 @@
         </div>
     </div>
 
-    <script type="module" src="script.js?v=3.0.1"></script>
+    <script type="module" src="script.js?v=3.2.2"></script>
 </body>
 </html>

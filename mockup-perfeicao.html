@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAdashglass Mockup Premium</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #ffb400;
+            --green: #00e676;
+            --panel: rgba(25, 25, 38, 0.82);
+            --panel-soft: rgba(34, 35, 52, 0.72);
+            --border: rgba(255,255,255,0.09);
+            --text: #eef1f8;
+            --muted: rgba(238,241,248,0.58);
+            --faint: rgba(238,241,248,0.38);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            font-family: 'Nunito', system-ui, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 72% 34%, rgba(255,180,0,0.14), transparent 28%),
+                radial-gradient(circle at 18% 82%, rgba(80,120,255,0.09), transparent 34%),
+                linear-gradient(145deg, #090b14 0%, #15121e 48%, #090a12 100%);
+        }
+
+        .screen {
+            width: min(946px, calc(100vw - 28px));
+            height: min(720px, calc(100vh - 28px));
+            overflow: hidden;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background:
+                linear-gradient(180deg, rgba(18,18,31,0.96), rgba(18,17,26,0.88)),
+                url('background/fundo.jpg') center/cover;
+            box-shadow:
+                0 28px 80px rgba(0,0,0,0.62),
+                inset 0 1px 0 rgba(255,255,255,0.06);
+        }
+
+        .content {
+            height: 100%;
+            padding: 32px 34px;
+            background:
+                radial-gradient(circle at 74% 50%, rgba(255,180,0,0.06), transparent 26%),
+                linear-gradient(180deg, rgba(12,12,20,0.18), rgba(12,12,20,0.44));
+            backdrop-filter: blur(4px);
+        }
+
+        .top {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 22px;
+            align-items: start;
+        }
+
+        .time {
+            font-size: 60px;
+            font-weight: 800;
+            line-height: 0.95;
+            letter-spacing: -1px;
+        }
+
+        .date {
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .lights-count {
+            align-self: center;
+            margin-top: 30px;
+            color: var(--muted);
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .lights-count strong { color: var(--accent); }
+
+        .status-row {
+            display: flex;
+            justify-content: center;
+            gap: 26px;
+            margin: 34px 0 36px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .status .dot {
+            color: var(--green);
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .hero-row {
+            display: grid;
+            grid-template-columns: 290px 1fr;
+            gap: 16px;
+            align-items: start;
+            margin-bottom: 24px;
+        }
+
+        .weather {
+            height: 110px;
+            border-radius: 11px;
+            border: 1px solid var(--border);
+            background: var(--panel-soft);
+            display: grid;
+            grid-template-columns: 48px 1fr auto auto;
+            align-items: center;
+            gap: 16px;
+            padding: 18px 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.28);
+        }
+
+        .weather-icon {
+            font-size: 28px;
+            color: var(--muted);
+        }
+
+        .temp {
+            font-size: 34px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .weather-label {
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.2;
+        }
+
+        .metric {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .scenes {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .scene {
+            min-width: 122px;
+            height: 51px;
+            padding: 0 18px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--panel-soft);
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 14px;
+            box-shadow: 0 20px 46px rgba(0,0,0,0.22);
+        }
+
+        .section-title {
+            margin: 8px 0 16px;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.4px;
+        }
+
+        .rooms {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+        }
+
+        .room-card {
+            position: relative;
+            height: 120px;
+            border-radius: 13px;
+            border: 1px solid var(--border);
+            background: var(--panel);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            color: var(--muted);
+            box-shadow:
+                0 18px 42px rgba(0,0,0,0.28),
+                inset 0 1px 0 rgba(255,255,255,0.035);
+        }
+
+        .room-card.on {
+            border-color: rgba(255,180,0,0.78);
+            color: var(--accent);
+            box-shadow:
+                0 0 32px rgba(255,180,0,0.18),
+                0 18px 42px rgba(0,0,0,0.34),
+                inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+
+        .room-card .icon {
+            font-size: 25px;
+            line-height: 1;
+            filter: grayscale(1);
+        }
+
+        .room-card.on .icon {
+            filter: drop-shadow(0 0 10px rgba(255,180,0,0.7));
+        }
+
+        .room-card .name {
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .room-card.off .name { color: rgba(238,241,248,0.86); }
+
+        .mini-bar {
+            position: absolute;
+            bottom: 8px;
+            width: 28px;
+            height: 2px;
+            border-radius: 99px;
+            background: rgba(255,255,255,0.11);
+        }
+
+        .room-card.on .mini-bar { background: var(--accent); }
+
+        .unavailable {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            color: #ff1744;
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+        }
+    </style>
+</head>
+<body>
+    <main class="screen">
+        <div class="content">
+            <section class="top">
+                <div>
+                    <div class="time">00:59</div>
+                    <div class="date">Quinta-Feira, 30 De Abril</div>
+                </div>
+                <div class="lights-count"><strong>7</strong> luzes ligadas</div>
+            </section>
+
+            <section class="status-row">
+                <div class="status"><span class="dot">▢</span>Fechado</div>
+                <div class="status"><span class="dot">⌂</span>Portão fechado</div>
+                <div class="status"><span class="dot">♙</span>2 em casa</div>
+                <div class="status"><span class="dot">♢</span>Alarme ativo</div>
+                <div class="status"><span class="dot">⌁</span>Online</div>
+            </section>
+
+            <section class="hero-row">
+                <div class="weather">
+                    <div class="weather-icon">☁</div>
+                    <div>
+                        <div class="temp">24°</div>
+                        <div class="weather-label">Parcialmente<br>nublado</div>
+                    </div>
+                    <div class="metric">♒<br>62%</div>
+                    <div class="metric">↝<br>12 km/h</div>
+                </div>
+
+                <div class="scenes">
+                    <div class="scene">▦ Cinema</div>
+                    <div class="scene">☾ Boa Noite</div>
+                    <div class="scene">☼ Bom Dia</div>
+                    <div class="scene">⇥ Sair de Casa</div>
+                    <div class="scene">✧ Festa</div>
+                </div>
+            </section>
+
+            <div class="section-title">Cômodos</div>
+            <section class="rooms">
+                <div class="room-card off"><div class="icon">▭</div><div class="name">Vídeo</div></div>
+                <div class="room-card on"><div class="icon">▰</div><div class="name">Estar</div><div class="mini-bar"></div></div>
+                <div class="room-card off"><div class="icon">♨</div><div class="name">Gourmet</div></div>
+                <div class="room-card off"><div class="icon">♧</div><div class="name">Rua</div></div>
+                <div class="room-card on"><div class="icon">♧</div><div class="name">Corredor T</div><div class="mini-bar"></div></div>
+                <div class="room-card on"><div class="icon">♧</div><div class="name">Jantar</div><div class="mini-bar"></div></div>
+                <div class="room-card off"><div class="icon">♧</div><div class="name">Despensa</div></div>
+                <div class="room-card off"><div class="icon">♨</div><div class="name">WC Social</div></div>
+                <div class="room-card on"><div class="icon">♌</div><div class="name">Fundos</div><div class="mini-bar"></div></div>
+                <div class="room-card on"><div class="icon">▰</div><div class="name">Garagem</div><div class="mini-bar"></div></div>
+                <div class="room-card on"><div class="icon">↕</div><div class="name">Escada</div><div class="mini-bar"></div></div>
+                <div class="room-card off"><div class="unavailable">INDISPONÍVEL</div><div class="icon">♧</div><div class="name">Jardim</div></div>
+                <div class="room-card off"><div class="icon">♧</div><div class="name">Corredor 4º</div></div>
+                <div class="room-card on"><div class="icon">♨</div><div class="name">Cozinha</div><div class="mini-bar"></div></div>
+                <div class="room-card off"><div class="icon">▣</div><div class="name">Lavanderia</div></div>
+                <div class="room-card off"><div class="unavailable">INDISPONÍVEL</div><div class="icon">♧</div><div class="name">Varanda</div></div>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Home Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="reference-dashboard.css" />
+  <!-- Lucide icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="clock">
+        <div class="clock-time">
+          <span id="clock-hours">00</span><span class="clock-sep">:</span><span id="clock-minutes">00</span>
+        </div>
+        <p class="clock-date" id="clock-date">—</p>
+      </div>
+      <div class="lights-count">
+        <p><span id="active-count" class="accent tabular">0</span> luzes ligadas</p>
+      </div>
+    </header>
+
+    <!-- Status bar -->
+    <div class="status-bar" id="status-bar"></div>
+
+    <!-- Weather + Scenes -->
+    <section class="row">
+      <div class="weather glass-card">
+        <div class="weather-left">
+          <i data-lucide="cloud" class="weather-icon"></i>
+          <div>
+            <span class="weather-temp tabular">24°</span>
+            <p class="weather-desc">Parcialmente nublado</p>
+          </div>
+        </div>
+        <div class="weather-meta">
+          <div class="meta-item"><i data-lucide="droplets"></i><span class="tabular">62%</span></div>
+          <div class="meta-item"><i data-lucide="wind"></i><span class="tabular">12 km/h</span></div>
+        </div>
+      </div>
+      <div class="scenes" id="scenes"></div>
+    </section>
+
+    <!-- Rooms -->
+    <section class="rooms-section">
+      <h2 class="section-title">Cômodos</h2>
+      <div class="rooms-grid" id="rooms-grid"></div>
+    </section>
+  </div>
+
+  <!-- Light control modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal glass-card" id="modal">
+      <button class="modal-close" id="modal-close"><i data-lucide="x"></i></button>
+      <div class="modal-header">
+        <div class="modal-icon" id="modal-icon"><i data-lucide="lightbulb"></i></div>
+        <div>
+          <h3 id="modal-title">—</h3>
+          <p id="modal-state" class="muted">Desligado</p>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div>
+          <div class="row-between">
+            <span class="muted">Brilho</span>
+            <span class="tabular" id="brightness-value">0%</span>
+          </div>
+          <input type="range" min="0" max="100" value="0" id="brightness-slider" class="slider" />
+        </div>
+        <div>
+          <span class="muted block">Temperatura de Cor</span>
+          <div class="color-temps">
+            <button class="color-temp glass-card"><span class="dot" style="background:hsl(35,100%,60%)"></span><span>Quente</span></button>
+            <button class="color-temp glass-card"><span class="dot" style="background:hsl(45,30%,80%)"></span><span>Neutro</span></button>
+            <button class="color-temp glass-card"><span class="dot" style="background:hsl(210,50%,85%)"></span><span>Frio</span></button>
+          </div>
+        </div>
+        <button class="toggle-btn" id="toggle-btn"><i data-lucide="power"></i><span>Ligar</span></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="reference-dashboard.js"></script>
+</body>
+</html>

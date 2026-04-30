@@ -11,13 +11,14 @@ import { createConnection, createLongLivedTokenAuth, subscribeEntities, callServ
 // Estado dos filtros de área por página
 const areaFilters = {
     home: new Set(), p7: new Set(), ipad: new Set(),
+    lovable: new Set(),
     lights: new Set(), switches: new Set(),
     sensors: new Set(), covers: new Set(), buttons: new Set(), cameras: new Set()
 };
 
 // Estado dos filtros de status por página
 const stateFilters = {
-    home: 'all', p7: 'all', ipad: 'all',
+    home: 'all', p7: 'all', ipad: 'all', lovable: 'all',
     lights: 'all', switches: 'all'
 };
 
@@ -26,9 +27,12 @@ document.querySelectorAll('.nav-icon').forEach(icon => {
     icon.onclick = () => {
         document.querySelectorAll('.nav-icon, .page').forEach(el => el.classList.remove('active'));
         icon.classList.add('active');
-        document.getElementById(icon.dataset.target).classList.add('active');
+        const target = document.getElementById(icon.dataset.target);
+        target.classList.add('active');
+        document.body.dataset.activePage = icon.dataset.target;
     };
 });
+document.body.dataset.activePage = 'page-home';
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.onclick = () => {
@@ -78,20 +82,35 @@ document.querySelectorAll('.filter-toggle-btn').forEach(btn => {
 // RELÓGIO
 setInterval(() => {
     const now = new Date();
-    document.getElementById('time').innerText = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    document.getElementById('date').innerText = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+    const time = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const date = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+    document.getElementById('time').innerText = time;
+    document.getElementById('date').innerText = date;
+    const premiumTime = document.getElementById('premium-time');
+    const premiumDate = document.getElementById('premium-date');
+    if (premiumTime) premiumTime.innerText = time;
+    if (premiumDate) premiumDate.innerText = date;
 }, 1000);
 
 // SIMPLIFICAÇÃO DE NOMES
 function simplifyName(friendlyName, areaName, entityId) {
     let name = friendlyName || entityId.split('.')[1].replace(/_/g, ' ');
     const domain = entityId.split('.')[0];
-    if (domain === 'light') name = name.replace(/luz\s*|luz$/gi, '');
+    if (domain === 'light') name = name.replace(/\bluz(?:es)?\b/gi, '');
     if (areaName && areaName !== "Sem Área") {
         name = name.replace(new RegExp(areaName, 'gi'), '');
     }
-    name = name.trim();
-    if (!name) name = friendlyName || entityId.split('.')[1];
+    name = name.replace(/\s+/g, ' ').trim();
+    if (!name) {
+        const fallbackByDomain = {
+            light: 'Principal',
+            switch: 'Tomada',
+            fan: 'Ventilador',
+            cover: 'Persiana',
+            button: 'Botão'
+        };
+        name = fallbackByDomain[domain] || entityId.split('.')[1].replace(/_/g, ' ');
+    }
     return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
@@ -112,13 +131,13 @@ function getAreaInfo(entityId, areas, entities_reg, devices_reg) {
 
 // FILTROS DE ÁREA
 function loadAreaFilters() {
-    ['home', 'p7', 'ipad', 'lights', 'switches', 'sensors', 'covers', 'buttons', 'cameras'].forEach(key => {
+    ['home', 'p7', 'ipad', 'lovable', 'lights', 'switches', 'sensors', 'covers', 'buttons', 'cameras'].forEach(key => {
         try {
             const saved = JSON.parse(localStorage.getItem('area_filter_' + key) || '[]');
             saved.forEach(r => areaFilters[key].add(r));
         } catch(e) {}
     });
-    ['home', 'p7', 'ipad', 'lights', 'switches'].forEach(key => {
+    ['home', 'p7', 'ipad', 'lovable', 'lights', 'switches'].forEach(key => {
         const saved = localStorage.getItem('state_filter_' + key);
         if (saved) stateFilters[key] = saved;
     });
@@ -215,14 +234,15 @@ function getEntityIcon(domain, state) {
 // FAVORITOS — cache local como fonte de verdade
 // Evita race condition: subscribeEntities pode não entregar
 // atualizações das entidades sensor.hadashglass_* imediatamente.
-const favsCache = { home: [], p7: [], ipad: [], pinned: [] };
+const favsCache = { home: [], p7: [], ipad: [], lovable: [], pinned: [] };
 
 function syncFavsFromEntities(entities) {
     const map = {
         home:   'sensor.hadashglass_favorites',
         pinned: 'sensor.hadashglass_pinned',
         p7:   'sensor.hadashglass_p7_favorites',
-        ipad: 'sensor.hadashglass_ipad_favorites'
+        ipad: 'sensor.hadashglass_ipad_favorites',
+        lovable: 'sensor.hadashglass_lovable_favorites'
     };
     Object.entries(map).forEach(([key, entityId]) => {
         const ent = entities[entityId];
@@ -235,6 +255,7 @@ function syncFavsFromEntities(entities) {
 function getFavorites()     { return favsCache.home; }
 function getP7Favorites()   { return favsCache.p7; }
 function getIPadFavorites() { return favsCache.ipad; }
+function getLovableFavorites() { return favsCache.lovable; }
 
 // RENDER HOME
 function renderHome(entities, conn, areas, entities_reg, devices_reg) {
@@ -440,6 +461,159 @@ function renderIPad(entities, conn, areas, entities_reg, devices_reg) {
     });
 }
 
+function getLovableIcon(domain) {
+    if (domain === 'light') {
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 1 4 12.7V17H8v-2.3A7 7 0 0 1 12 2z"/></svg>`;
+    }
+    if (domain === 'switch' || domain === 'input_boolean') {
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6M15 2v6M6 8h12v3a6 6 0 0 1-6 6 6 6 0 0 1-6-6V8zM12 17v5"/></svg>`;
+    }
+    if (domain === 'fan') {
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2.5"/><path d="M12 2c2.5 0 4 2 4 4 0 2-2 3.5-4 4M12 22c-2.5 0-4-2-4-4 0-2 2-3.5 4-4M2 12c0-2.5 2-4 4-4 2 0 3.5 2 4 4M22 12c0 2.5-2 4-4 4-2 0-3.5-2-4-4"/></svg>`;
+    }
+    if (domain === 'media_player') {
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><polyline points="8,22 12,18 16,22"/></svg>`;
+    }
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="3"/><path d="M9 12h6M12 9v6"/></svg>`;
+}
+
+// RENDER LOVABLE — favoritos próprios com visual do protótipo Lovable.
+function renderLovable(entities, conn, areas, entities_reg, devices_reg) {
+    const container = document.getElementById('lovable-grid');
+    if (!container) return;
+
+    const grouped = {};
+    getLovableFavorites().forEach(id => {
+        if (!entities[id]) return;
+        const reg = entities_reg.find(e => e.entity_id === id);
+        if (reg && (reg.hidden_by || reg.disabled_by)) return;
+        const room = getAreaInfo(id, areas, entities_reg, devices_reg);
+        if (!grouped[room]) grouped[room] = [];
+        grouped[room].push({ id, state: entities[id] });
+    });
+
+    const allRooms = Object.keys(grouped).sort();
+    renderAreaFilter('filter-lovable', allRooms, 'lovable', () => renderLovable(entities, conn, areas, entities_reg, devices_reg));
+    renderStateFilter('state-filter-lovable', 'lovable',
+        { all: 'Todos', on: 'On', off: 'Off' },
+        () => renderLovable(entities, conn, areas, entities_reg, devices_reg));
+
+    container.innerHTML = '';
+
+    if (allRooms.length === 0) {
+        container.innerHTML = '<div class="lovable-empty">' +
+            '<div class="lovable-empty-icon">✨</div>' +
+            '<p>Nenhuma entidade favorita.</p>' +
+            '<p>Vá em Ajustes e marque estrelas Love para preencher o Lovable.</p>' +
+            '</div>';
+        return;
+    }
+
+    allRooms.forEach(room => {
+        if (!isRoomVisible(room, 'lovable')) return;
+
+        const roomEntities = grouped[room].filter(item => isStateVisible(item.state.state, 'lovable'));
+        if (roomEntities.length === 0) return;
+
+        const section = document.createElement('section');
+        section.className = 'lovable-room';
+
+        const title = document.createElement('div');
+        title.className = 'lovable-room-title';
+        title.innerHTML = `<span>${room}</span><span class="lovable-room-line"></span>`;
+        section.appendChild(title);
+
+        const grid = document.createElement('div');
+        grid.className = 'lovable-card-grid';
+
+        roomEntities.forEach(item => {
+            const ent = item.state;
+            const isOn = ent.state === 'on';
+            const domain = item.id.split('.')[0];
+            const displayName = simplifyName(ent.attributes.friendly_name, room, item.id);
+            const card = document.createElement('div');
+            card.className = `lovable-card ${isOn ? 'on' : ''}`;
+            card.innerHTML = `
+                <div class="lovable-card-icon">${getLovableIcon(domain)}</div>
+                <div class="lovable-card-name">${displayName}</div>
+            `;
+            if (['light', 'switch', 'fan', 'input_boolean'].includes(domain)) {
+                card.onclick = () => callService(conn, domain, domain === 'input_boolean' ? (isOn ? 'turn_off' : 'turn_on') : 'toggle', { entity_id: item.id });
+            }
+            grid.appendChild(card);
+        });
+
+        section.appendChild(grid);
+        container.appendChild(section);
+    });
+}
+
+function getPremiumAreaIcon(room, items) {
+    const normalizedRoom = room.toLowerCase();
+    if (normalizedRoom.includes('garagem')) return '▰';
+    if (normalizedRoom.includes('cozinha')) return '♨';
+    if (normalizedRoom.includes('jantar')) return '♧';
+    if (normalizedRoom.includes('sala') || normalizedRoom.includes('estar')) return '▰';
+    if (normalizedRoom.includes('banho') || normalizedRoom.includes('wc')) return '♨';
+    if (normalizedRoom.includes('jardim') || normalizedRoom.includes('varanda')) return '♧';
+    if (normalizedRoom.includes('escada')) return '↕';
+    const domains = items.map(item => item.id.split('.')[0]);
+    if (domains.includes('fan')) return '⌘';
+    if (domains.includes('switch')) return '⌁';
+    return '♧';
+}
+
+// RENDER PREMIUM — dashboard por cômodos, baseado na referência estática.
+function renderPremium(entities, conn, areas, entities_reg, devices_reg) {
+    const grid = document.getElementById('premium-rooms-grid');
+    if (!grid) return;
+
+    const controllableDomains = ['light', 'switch', 'fan'];
+    const grouped = {};
+
+    Object.keys(entities).forEach(id => {
+        const domain = id.split('.')[0];
+        if (!controllableDomains.includes(domain)) return;
+        const reg = entities_reg.find(e => e.entity_id === id);
+        if (reg && (reg.hidden_by || reg.disabled_by)) return;
+        const room = getAreaInfo(id, areas, entities_reg, devices_reg);
+        if (!grouped[room]) grouped[room] = [];
+        grouped[room].push({ id, state: entities[id] });
+    });
+
+    const rooms = Object.keys(grouped).sort();
+    const activeLights = Object.keys(entities).filter(id => id.startsWith('light.') && entities[id].state === 'on').length;
+    const activeCountEl = document.getElementById('premium-active-count');
+    if (activeCountEl) activeCountEl.innerText = activeLights;
+
+    grid.innerHTML = '';
+    if (rooms.length === 0) {
+        grid.innerHTML = '<div class="premium-empty">Nenhum cômodo encontrado.</div>';
+        return;
+    }
+
+    rooms.forEach(room => {
+        const items = grouped[room];
+        const activeItems = items.filter(item => item.state.state === 'on');
+        const isOn = activeItems.length > 0;
+        const brightness = items.length ? Math.round((activeItems.length / items.length) * 100) : 0;
+        const card = document.createElement('button');
+        card.className = `premium-room-card ${isOn ? 'on' : ''}`;
+        card.innerHTML = `
+            <span class="premium-room-icon">${getPremiumAreaIcon(room, items)}</span>
+            <span class="premium-room-name">${room}</span>
+            ${isOn ? `<span class="premium-brightness-bar"><span style="width:${brightness}%"></span></span>` : ''}
+        `;
+        card.onclick = () => {
+            items.forEach(item => {
+                const domain = item.id.split('.')[0];
+                callService(conn, domain, isOn ? 'turn_off' : 'turn_on', { entity_id: item.id });
+            });
+        };
+        grid.appendChild(card);
+    });
+}
+
 // FAVORITO — adiciona/remove, atualiza cache local e salva no HA
 function saveFavorite(entityId, starEl, cacheKey, haEntityId) {
     const currentList = favsCache[cacheKey];
@@ -536,6 +710,7 @@ function renderList(domain, containerId, entities, conn, areas, entities_reg, de
             const isHomeFav   = favsCache.home.includes(item.id);
             const isP7Fav     = favsCache.p7.includes(item.id);
             const isIPadFav   = favsCache.ipad.includes(item.id);
+            const isLovableFav = favsCache.lovable.includes(item.id);
             const isPinned    = favsCache.pinned.includes(item.id);
             const itemDiv = document.createElement('div');
             itemDiv.className = 'list-item';
@@ -559,6 +734,11 @@ function renderList(domain, containerId, entities, conn, areas, entities_reg, de
                         </div>
                         <div class="stars-divider"></div>
                         <div class="star-group">
+                            <span class="star-btn star-lovable ${isLovableFav ? 'star-on' : ''}">★</span>
+                            <span class="star-label">Love</span>
+                        </div>
+                        <div class="stars-divider"></div>
+                        <div class="star-group">
                             <span class="star-btn star-pin ${isPinned ? 'star-on' : ''}">📌</span>
                             <span class="star-label">Top</span>
                         </div>
@@ -577,6 +757,9 @@ function renderList(domain, containerId, entities, conn, areas, entities_reg, de
             itemDiv.querySelector('.star-ipad').onclick = function() {
                 saveFavorite(item.id, this, 'ipad', 'sensor.hadashglass_ipad_favorites');
             };
+            itemDiv.querySelector('.star-lovable').onclick = function() {
+                saveFavorite(item.id, this, 'lovable', 'sensor.hadashglass_lovable_favorites');
+            };
             itemDiv.querySelector('.star-pin').onclick = function() {
                 saveFavorite(item.id, this, 'pinned', 'sensor.hadashglass_pinned');
             };
@@ -592,6 +775,7 @@ function updateSystemTab(entities, areas) {
     if (el('sys-home-count'))   el('sys-home-count').innerText   = favsCache.home.filter(id => entities[id]).length;
     if (el('sys-p7-count'))     el('sys-p7-count').innerText     = favsCache.p7.filter(id => entities[id]).length;
     if (el('sys-ipad-count'))   el('sys-ipad-count').innerText   = favsCache.ipad.filter(id => entities[id]).length;
+    if (el('sys-lovable-count')) el('sys-lovable-count').innerText = favsCache.lovable.filter(id => entities[id]).length;
     if (el('sys-areas-count'))  el('sys-areas-count').innerText  = areas.length;
 }
 
@@ -605,6 +789,16 @@ function updateWeather(entities) {
     document.getElementById('w-rain').innerText = `${entities[RAIN_DAY_1]?.state || 0}%`;
     const icons = { sunny:'☀️', cloudy:'☁️', rainy:'🌧️', partlycloudy:'⛅', pouring:'🌧️', 'clear-night':'🌙' };
     document.getElementById('w-icon').innerText = icons[w.state] || '☀️';
+    const premiumTemp = document.getElementById('premium-weather-temp');
+    const premiumDesc = document.getElementById('premium-weather-desc');
+    const premiumHumidity = document.getElementById('premium-weather-humidity');
+    const premiumRain = document.getElementById('premium-weather-rain');
+    const premiumIcon = document.getElementById('premium-weather-icon');
+    if (premiumTemp) premiumTemp.innerText = Math.round(w.attributes.temperature);
+    if (premiumDesc) premiumDesc.innerText = w.state.replace(/_/g, ' ');
+    if (premiumHumidity) premiumHumidity.innerText = `${w.attributes.humidity}%`;
+    if (premiumRain) premiumRain.innerText = `${entities[RAIN_DAY_1]?.state || 0}%`;
+    if (premiumIcon) premiumIcon.innerText = icons[w.state] || '☁';
 }
 
 // RENDER GENÉRICO (Sensores, Persianas, Botões, Câmeras, etc.)
@@ -753,6 +947,8 @@ async function init() {
             renderHome(entities, conn, areas, entities_reg, devices);
             renderP7(entities, conn, areas, entities_reg, devices);
             renderIPad(entities, conn, areas, entities_reg, devices);
+            renderLovable(entities, conn, areas, entities_reg, devices);
+            renderPremium(entities, conn, areas, entities_reg, devices);
             renderList('light',  'lights-list',   entities, conn, areas, entities_reg, devices);
             renderList('switch', 'switches-list', entities, conn, areas, entities_reg, devices);
             renderDomainList({ domains: ['sensor', 'binary_sensor'], containerId: 'sensors-list', filterId: 'filter-sensors', filterKey: 'sensors' }, entities, conn, areas, entities_reg, devices);
