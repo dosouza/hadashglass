@@ -64,7 +64,13 @@ hadashglass/
 
 ## Configuração
 
+`config.js` e `config-legacy.js` guardam o token do HA, estão no `.gitignore` e não vêm com o clone. O dashboard não funciona sem eles, então crie os dois em cada máquina. Nunca os commite.
+
 1. Copie `config.example.js` para `config.js` e preencha com a URL e o token do seu HA:
+
+```bash
+cp config.example.js config.js
+```
 
 ```js
 export const HA_CONFIG = {
@@ -75,7 +81,7 @@ export const WEATHER_ENTITY = 'weather.sua_entidade';
 export const RAIN_DAY_1 = 'sensor.sua_entidade_chuva';
 ```
 
-2. Para o iPad, crie `config-legacy.js` (sem `export`):
+2. Para o iPad, crie `config-legacy.js` a partir do mesmo exemplo, trocando `export const` por `var` (o Safari do iPad não suporta ES Modules):
 
 ```js
 var HA_URL = 'http://SEU_HA_IP:8123';
@@ -102,9 +108,13 @@ Para deploy automático via git:
 cd /config/www/hadashglass
 git clone git@github.com:SEU_USUARIO/hadashglass.git .
 
+# Crie config.js e config-legacy.js (veja "Configuração")
+
 # Adicione ao crontab (git pull a cada 5 min)
 */5 * * * * cd /config/www/hadashglass && git pull >> autopull.log 2>&1
 ```
+
+> **Clones antigos:** nos clones em que esses arquivos ainda eram rastreados, o `git pull` que trouxer a remoção apaga `config.js` e `config-legacy.js` do disco. Faça uma cópia antes e restaure depois do pull.
 
 ---
 
